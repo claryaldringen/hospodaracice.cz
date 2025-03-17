@@ -1,4 +1,14 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Cheque-Regular';
+  src: url('/Cheque-Regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'bukhariscript';
+  src: url('/bukhariscript.ttf') format('truetype');
+}
 
 :root {
   --background: #ffffff;

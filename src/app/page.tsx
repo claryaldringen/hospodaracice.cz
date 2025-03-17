@@ -1,103 +1,143 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import NextImage from 'next/image';
+import Footer from '@/app/components/Footer';
+import Navigation from '@/app/components/Navigation';
+
+const baseUrl = process.env.NEXT_PUBLIC_BLOB_BASE_URL;
+
+const imageTypes = [
+  'action',
+  'weekly',
+  'permanent1',
+  'permanent2',
+  'permanent3',
+  'permanent4',
+] as const;
+type ImageType = (typeof imageTypes)[number];
+
+export default function HomePage() {
+  const [images, setImages] = useState<Record<ImageType, string>>(
+    imageTypes.reduce(
+      (acc, type) => {
+        acc[type] = `${baseUrl}/${type}.jpg`;
+        return acc;
+      },
+      {} as Record<ImageType, string>
+    )
+  );
+  const [imageSizes, setImageSizes] = useState<{
+    [key: string]: { width: number; height: number };
+  }>({});
+
+  const fetchImageSize = (url: string, key: string) => {
+    const img = document.createElement('img');
+    img.onload = () => {
+      setImageSizes((prev) => ({
+        ...prev,
+        [key]: { width: img.naturalWidth, height: img.naturalHeight },
+      }));
+    };
+    img.src = url;
+  };
+
+  const isImageAccessible = async (url: string) => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const [visibleImages, setVisibleImages] = useState({
+    action: false,
+    weekly: false,
+    permanent: false,
+  });
+
+  useEffect(() => {
+    const checkImages = async () => {
+      const actionVisible = images.action ? await isImageAccessible(images.action) : false;
+      const weeklyVisible = images.weekly ? await isImageAccessible(images.weekly) : false;
+      const permanentVisible = images.permanent1
+        ? await isImageAccessible(images.permanent1)
+        : false;
+
+      setVisibleImages({
+        action: actionVisible,
+        weekly: weeklyVisible,
+        permanent: permanentVisible,
+      });
+
+      if (actionVisible && images.action) fetchImageSize(images.action, 'action');
+      if (weeklyVisible && images.weekly) fetchImageSize(images.weekly, 'weekly');
+      if (permanentVisible && images.permanent1) fetchImageSize(images.permanent1, 'permanent');
+    };
+    checkImages();
+  }, [images]);
+
+  console.log(visibleImages);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div>
+      <Navigation visibleImages={visibleImages} />
+      <main className="pt-12 bg-black">
+        {visibleImages.action && imageSizes.action && (
+          <section id="action">
+            <div className="relative w-full h-screen mt-4 mb-4">
+              <NextImage
+                src={images.action!}
+                alt="Akce Letáček"
+                layout="fill"
+                objectFit="contain"
+                className="shadow-lg"
+              />
+            </div>
+          </section>
+        )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+        {visibleImages.weekly && imageSizes.weekly && (
+          <section id="weekly">
+            <div className="relative w-full h-screen mt-4 mb-4">
+              <NextImage
+                src={images.weekly!}
+                alt="Týdenní Nabídka"
+                layout="fill"
+                objectFit="contain"
+                className="shadow-lg"
+              />
+            </div>
+          </section>
+        )}
+
+        {visibleImages.permanent && (
+          <section id="permanent" className="grid grid-cols-1 md:grid-cols-2">
+            {[images.permanent1, images.permanent2, images.permanent3, images.permanent4].map(
+              (url, index) =>
+                url && (
+                  <div
+                    key={index}
+                    className={`relative w-full h-screen flex ${
+                      index % 2 === 0 ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    <NextImage
+                      src={url}
+                      width={imageSizes.permanent?.width || 0}
+                      height={imageSizes.permanent?.height || 0}
+                      alt={`Stálá Nabídka ${index + 1}`}
+                      className="h-auto max-h-screen max-w-full object-contain"
+                    />
+                  </div>
+                )
+            )}
+          </section>
+        )}
+
+        <Footer />
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
