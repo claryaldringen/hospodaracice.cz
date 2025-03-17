@@ -18,7 +18,7 @@ const imageTypes = [
 type ImageType = (typeof imageTypes)[number];
 
 export default function HomePage() {
-  const [images, setImages] = useState<Record<ImageType, string>>(
+  const [images] = useState<Record<ImageType, string>>(
     imageTypes.reduce(
       (acc, type) => {
         acc[type] = `${baseUrl}/${type}.jpg`;
