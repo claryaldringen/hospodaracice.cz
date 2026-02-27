@@ -17,21 +17,21 @@ async function checkImageExists(url: string): Promise<boolean> {
 }
 
 export default async function HomePage() {
-  const imageUrls = Object.fromEntries(
-    IMAGE_TYPES.map((type) => [type, `${baseUrl}/${type}.jpg`])
-  ) as Record<string, string>;
-
-  const results = await Promise.all(
-    IMAGE_TYPES.map(async (type) => [type, await checkImageExists(imageUrls[type])] as const)
+  const resolved = await Promise.all(
+    IMAGE_TYPES.map(async (type) => {
+      const webpUrl = `${baseUrl}/${type}.webp`;
+      if (await checkImageExists(webpUrl)) return [type, webpUrl] as const;
+      const jpgUrl = `${baseUrl}/${type}.jpg`;
+      if (await checkImageExists(jpgUrl)) return [type, jpgUrl] as const;
+      return [type, null] as const;
+    })
   );
 
-  const availability = Object.fromEntries(results) as Record<string, boolean>;
-
   const availableImages: Record<string, string> = {};
-  for (const type of IMAGE_TYPES) {
-    if (availability[type]) {
-      availableImages[type] = imageUrls[type];
-    }
+  const availability: Record<string, boolean> = {};
+  for (const [type, url] of resolved) {
+    availability[type] = url !== null;
+    if (url) availableImages[type] = url;
   }
 
   const visibleSections = {
