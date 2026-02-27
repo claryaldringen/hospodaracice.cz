@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'File or type not provided' }, { status: 400 });
   }
 
-  const filename = `${type}.jpg`;
+  const filename = `${type}.webp`;
 
   const blob = await put(filename, file, {
     access: 'public',

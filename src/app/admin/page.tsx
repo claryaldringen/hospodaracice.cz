@@ -4,6 +4,42 @@ import { IMAGE_TYPES, type ImageType } from '@/app/types';
 
 const BLOB_BASE_URL = process.env.NEXT_PUBLIC_BLOB_BASE_URL;
 
+const MAX_WIDTH = 1920;
+const WEBP_QUALITY = 0.85;
+
+function processImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > MAX_WIDTH) {
+        height = Math.round(height * (MAX_WIDTH / width));
+        width = MAX_WIDTH;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas toBlob failed'));
+        },
+        'image/webp',
+        WEBP_QUALITY
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = url;
+  });
+}
+
 const IMAGE_LABELS: Record<ImageType, string> = {
   action: 'Akce',
   weekly: 'Týdenní nabídka',
@@ -23,10 +59,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState<StatusMessage>(null);
   const [images, setImages] = useState<Record<ImageType, string | null>>(
-    Object.fromEntries(IMAGE_TYPES.map((type) => [type, `${BLOB_BASE_URL}/${type}.jpg`])) as Record<
-      ImageType,
-      string | null
-    >
+    Object.fromEntries(IMAGE_TYPES.map((type) => [type, null])) as Record<ImageType, string | null>
   );
   const [existingImages, setExistingImages] = useState<Record<ImageType, boolean>>({
     action: false,
@@ -60,22 +93,29 @@ export default function AdminPage() {
     }
   };
 
-  const checkImages = useCallback(async () => {
+  const resolveImages = useCallback(async () => {
     const results = await Promise.all(
       IMAGE_TYPES.map(async (type) => {
-        if (images[type]) {
-          const exists = await checkImageExists(images[type]!);
-          return [type, exists];
-        }
-        return [type, false];
+        const webpUrl = `${BLOB_BASE_URL}/${type}.webp`;
+        if (await checkImageExists(webpUrl)) return [type, webpUrl] as const;
+        const jpgUrl = `${BLOB_BASE_URL}/${type}.jpg`;
+        if (await checkImageExists(jpgUrl)) return [type, jpgUrl] as const;
+        return [type, null] as const;
       })
     );
-    setExistingImages(Object.fromEntries(results) as Record<ImageType, boolean>);
-  }, [images]);
+    const newImages: Record<string, string | null> = {};
+    const newExists: Record<string, boolean> = {};
+    for (const [type, url] of results) {
+      newImages[type] = url;
+      newExists[type] = url !== null;
+    }
+    setImages(newImages as Record<ImageType, string | null>);
+    setExistingImages(newExists as Record<ImageType, boolean>);
+  }, []);
 
   useEffect(() => {
-    checkImages();
-  }, [checkImages]);
+    resolveImages();
+  }, [resolveImages]);
 
   const handleLogin = async () => {
     try {
@@ -114,8 +154,16 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    let processed: Blob;
+    try {
+      processed = await processImage(file);
+    } catch {
+      showStatus('error', 'Chyba při zpracování obrázku.');
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', processed, `${type}.webp`);
     formData.append('type', type);
 
     const res = await fetch('/api/upload', {
