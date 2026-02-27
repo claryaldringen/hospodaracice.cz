@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { del } from '@vercel/blob';
+import { isAuthenticated } from '@/app/lib/auth';
 
-export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-
-  if (authHeader !== `Bearer ${process.env.NEXT_PUBLIC_ADMIN_SECRET}`) {
+export async function POST(req: Request) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 

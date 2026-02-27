@@ -33,7 +33,7 @@ export default function Navigation({ visibleImages }: NavigationProps) {
     <header className="fixed top-0 left-0 w-full bg-white shadow-md z-50 p-4 flex justify-between items-center">
       <div className="flex items-center space-x-4 relative">
         <div className="relative w-12 h-12 md:w-16 md:h-16 -mb-4 -mt-4">
-          <Image src="/logo_Bakalar.png" alt="Logo Hospody" layout="fill" objectFit="contain" />
+          <Image src="/logo_Bakalar.png" alt="Logo Hospody" fill style={{ objectFit: 'contain' }} />
         </div>
         <h1
           className="text-sm md:text-3xl whitespace-nowrap"

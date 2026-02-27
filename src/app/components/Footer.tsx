@@ -1,5 +1,3 @@
-'use client';
-
 export default function Footer() {
   return (
     <footer id="contact" className="bg-white p-6 mt-10">

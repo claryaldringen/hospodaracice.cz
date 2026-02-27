@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
+import { isAuthenticated } from '@/app/lib/auth';
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-
-  if (authHeader !== `Bearer ${process.env.NEXT_PUBLIC_ADMIN_SECRET}`) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
@@ -16,15 +15,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'File or type not provided' }, { status: 400 });
   }
 
-  const filename = `${type}.jpg`; // Nastavení pevného názvu
+  const filename = `${type}.jpg`;
 
   const blob = await put(filename, file, {
     access: 'public',
     token: process.env.BLOB_READ_WRITE_TOKEN,
     addRandomSuffix: false,
   });
-
-  console.log(blob);
 
   return NextResponse.json({ url: blob.url });
 }
