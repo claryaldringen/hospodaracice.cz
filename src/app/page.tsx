@@ -3,7 +3,7 @@ import Navigation from '@/app/components/Navigation';
 import MenuImages from '@/app/components/MenuImages';
 import { IMAGE_TYPES } from '@/app/types';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const baseUrl = process.env.NEXT_PUBLIC_BLOB_BASE_URL;
 

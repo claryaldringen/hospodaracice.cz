@@ -10,6 +10,12 @@ interface MenuImagesProps {
 }
 
 export default function MenuImages({ availableImages, visibleSections }: MenuImagesProps) {
+  const firstVisibleSection = visibleSections.action
+    ? 'action'
+    : visibleSections.weekly
+      ? 'weekly'
+      : null;
+
   return (
     <>
       {visibleSections.action && availableImages.action && (
@@ -19,6 +25,8 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
               src={availableImages.action}
               alt="Akce Letáček"
               fill
+              sizes="100vw"
+              priority={firstVisibleSection === 'action'}
               style={{ objectFit: 'contain' }}
               className="shadow-lg"
             />
@@ -33,6 +41,8 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
               src={availableImages.weekly}
               alt="Týdenní Nabídka"
               fill
+              sizes="100vw"
+              priority={firstVisibleSection === 'weekly'}
               style={{ objectFit: 'contain' }}
               className="shadow-lg"
             />
@@ -55,6 +65,7 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
                     src={availableImages[key]}
                     width={800}
                     height={1200}
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     alt={`Stálá Nabídka ${index + 1}`}
                     className="h-auto max-h-screen max-w-full object-contain"
                   />

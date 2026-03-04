@@ -247,6 +247,7 @@ export default function AdminPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Zadejte heslo"
+                aria-label="Heslo"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyPress}
@@ -255,6 +256,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Skrýt heslo' : 'Zobrazit heslo'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? (
