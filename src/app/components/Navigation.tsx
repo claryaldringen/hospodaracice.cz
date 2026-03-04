@@ -43,7 +43,13 @@ export default function Navigation({ visibleImages }: NavigationProps) {
         </h1>
       </div>
       <div className="md:hidden">
-        <button onClick={() => setMenuOpen(!menuOpen)} className="focus:outline-none">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="focus:outline-none"
+          aria-label={menuOpen ? 'Zavřít menu' : 'Otevřít menu'}
+          aria-expanded={menuOpen}
+          aria-controls="main-nav"
+        >
           <svg
             className="w-6 h-6"
             fill="none"
@@ -61,6 +67,8 @@ export default function Navigation({ visibleImages }: NavigationProps) {
         </button>
       </div>
       <nav
+        id="main-nav"
+        aria-label="Hlavní navigace"
         className={`${
           menuOpen ? 'block' : 'hidden'
         } absolute top-16 left-0 w-full bg-white shadow-md p-4 md:static md:flex md:space-x-4 md:bg-transparent md:shadow-none md:p-0 text-1xl justify-end`}

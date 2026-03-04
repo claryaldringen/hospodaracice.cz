@@ -3,11 +3,13 @@
 @font-face {
   font-family: 'Cheque-Regular';
   src: url('/Cheque-Regular.otf') format('opentype');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'bukhariscript';
   src: url('/bukhariscript.ttf') format('truetype');
+  font-display: swap;
 }
 
 :root {
