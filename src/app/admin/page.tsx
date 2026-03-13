@@ -40,6 +40,26 @@ function processImage(file: File): Promise<Blob> {
   });
 }
 
+async function extractText(imageBlob: Blob): Promise<string | null> {
+  try {
+    const result = await Promise.race([
+      (async () => {
+        const { createWorker } = await import('tesseract.js');
+        const worker = await createWorker('ces', undefined, {
+          logger: () => {},
+        });
+        const { data } = await worker.recognize(imageBlob);
+        await worker.terminate();
+        return data.text.trim();
+      })(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 30000)),
+    ]);
+    return result && result.length > 0 ? result : null;
+  } catch {
+    return null;
+  }
+}
+
 const IMAGE_LABELS: Record<ImageType, string> = {
   action: 'Akce',
   weekly: 'Týdenní nabídka',
@@ -70,6 +90,9 @@ export default function AdminPage() {
     permanent3: false,
     permanent4: false,
   });
+  const [ocrProgress, setOcrProgress] = useState<Record<ImageType, boolean>>(
+    Object.fromEntries(IMAGE_TYPES.map((type) => [type, false])) as Record<ImageType, boolean>
+  );
 
   const fileInputRefs = useRef<Record<ImageType, HTMLInputElement | null>>({
     action: null,
@@ -163,9 +186,17 @@ export default function AdminPage() {
       return;
     }
 
+    // Run OCR
+    setOcrProgress((prev) => ({ ...prev, [type]: true }));
+    const ocrText = await extractText(processed);
+    setOcrProgress((prev) => ({ ...prev, [type]: false }));
+
     const formData = new FormData();
     formData.append('file', processed, `${type}.webp`);
     formData.append('type', type);
+    if (ocrText) {
+      formData.append('ocrText', ocrText);
+    }
 
     const res = await fetch('/api/upload', {
       method: 'POST',
@@ -176,7 +207,11 @@ export default function AdminPage() {
       const data = await res.json();
       setImages((prev) => ({ ...prev, [type]: `${data.url}?${new Date().getTime()}` }));
       setExistingImages((prev) => ({ ...prev, [type]: true }));
-      showStatus('success', 'Soubor úspěšně nahrán!');
+      if (ocrText) {
+        showStatus('success', 'Soubor úspěšně nahrán s OCR textem!');
+      } else {
+        showStatus('success', 'Soubor nahrán (OCR extrakce se nezdařila).');
+      }
     } else {
       showStatus('error', 'Chyba při nahrávání souboru.');
     }
@@ -185,10 +220,13 @@ export default function AdminPage() {
   const handleDelete = async (type: ImageType) => {
     if (!images[type]) return;
 
+    // Strip cache-busting query parameter before sending to delete API
+    const cleanUrl = images[type]!.split('?')[0];
+
     const res = await fetch('/api/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: images[type] }),
+      body: JSON.stringify({ url: cleanUrl, type }),
     });
 
     if (res.ok) {
@@ -357,7 +395,7 @@ export default function AdminPage() {
               </div>
 
               {/* Image preview */}
-              <div className="px-5 pt-4">
+              <div className="relative px-5 pt-4">
                 {existingImages[type] && images[type] ? (
                   <img
                     src={images[type]!}
@@ -380,6 +418,11 @@ export default function AdminPage() {
                         d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z"
                       />
                     </svg>
+                  </div>
+                )}
+                {ocrProgress[type] && (
+                  <div className="absolute inset-x-5 inset-y-4 flex items-center justify-center rounded-lg bg-black/50">
+                    <span className="text-sm font-medium text-white">Rozpoznávání textu…</span>
                   </div>
                 )}
               </div>
