@@ -28,9 +28,13 @@ Tesseract.js má zdokumentované problémy s Vercel serverless prostředím (WAS
 5. FormData se odešle na upload endpoint (obrázek + OCR text)
 
 **Zpracování chyb OCR:**
-- Pokud OCR selže (výjimka, timeout, prázdný výstup), upload obrázku proběhne normálně bez OCR textu
+- Pokud OCR selže (výjimka, timeout >30s, prázdný/whitespace-only výstup), upload obrázku proběhne normálně bez OCR textu
+- Prázdný nebo čistě whitespace výstup se považuje za neúspěch — JSON se nevytvoří
 - Admin uvidí upozornění "OCR extrakce se nezdařila, obrázek byl nahrán bez textu"
 - Žádný retry mechanismus — admin může smazat a znovu nahrát
+
+**Optimalizace:**
+- `tesseract.js` se importuje dynamicky (`await import('tesseract.js')`) — nezdržuje načtení admin panelu
 
 ### Upload endpoint (změny v `src/app/api/upload/route.ts`)
 
@@ -59,7 +63,7 @@ JSON se ukládá s `contentType: 'application/json'` a `access: 'public'`.
 
 1. **Nově:** endpoint přijímá navíc parametr `type` v request body
 2. Smaže obrázek (stávající logika přes URL)
-3. Pokusí se smazat i `{type}.json` z Blobu — pokud neexistuje, ignoruje 404
+3. Sestaví JSON URL jako `${process.env.NEXT_PUBLIC_BLOB_BASE_URL}/${type}.json` a pokusí se ho smazat přes `del()` z `@vercel/blob` — pokud neexistuje, ignoruje chybu
 
 Změna API kontraktu:
 ```json
@@ -74,13 +78,14 @@ Admin panel (`admin/page.tsx`) se upraví, aby posílal i `type`.
 
 ### Homepage — server část (změny v `src/app/page.tsx`)
 
-Pro každý dostupný obrázek se načte odpovídající JSON:
+Pro každý dostupný obrázek se **paralelně** s HEAD check obrázku načte i odpovídající JSON:
 
 ```typescript
-// Pro každý typ, kde existuje obrázek:
-const ocrResponse = await fetch(`${baseUrl}/${type}.json`, {
-  next: { revalidate: 60 }
-})
+// Paralelně pro všechny typy — image HEAD check + JSON fetch běží současně:
+const [imageResult, ocrResponse] = await Promise.all([
+  fetch(`${baseUrl}/${type}.webp`, { method: 'HEAD', next: { revalidate: 60 } }),
+  fetch(`${baseUrl}/${type}.json`, { next: { revalidate: 60 } })
+])
 if (ocrResponse.ok) {
   ocrData[type] = await ocrResponse.json()
 }
@@ -89,18 +94,20 @@ if (ocrResponse.ok) {
 
 Data se předají do `MenuImages` jako nový prop `ocrData: Record<string, ImageOcrData | undefined>`.
 
-### Homepage — klient (změny v `src/app/components/MenuImages.tsx`)
+### Homepage — MenuImages (změny v `src/app/components/MenuImages.tsx`)
+
+Komponenta zůstává server componentem (nepřidávat `'use client'`).
 
 1. Nový prop: `ocrData: Record<string, ImageOcrData | undefined>`
 2. `alt` atribut = `ocrData[type]?.altText` s fallbackem na stávající statický text ("Akce Letáček" atd.)
 3. Pod každým obrázkem: `<div className="sr-only">{ocrData[type]?.fullText}</div>` — pouze pokud fullText existuje
 
-### Datový formát
+### Datový formát (definice v `src/app/types.ts`)
 
 ```typescript
 interface ImageOcrData {
   fullText: string   // Celý extrahovaný text
-  altText: string    // Max ~150 znaků, oříznutý na hranici slova
+  altText: string    // Max 150 znaků, oříznutý na poslední hranici slova před/na pozici 150
 }
 ```
 
@@ -130,4 +137,5 @@ Soubory se ukládají vedle obrázků se stejným naming convention:
 - `src/app/api/delete/route.ts` — příjem `type`, mazání JSON při smazání obrázku
 - `src/app/page.tsx` — načítání JSON dat při renderování, předání do MenuImages
 - `src/app/components/MenuImages.tsx` — dynamický alt text + skrytý sr-only text
+- `src/app/types.ts` — nový `ImageOcrData` interface
 - `package.json` — nová závislost `tesseract.js`
