@@ -1,4 +1,5 @@
 import NextImage from 'next/image';
+import type { ImageOcrData } from '@/app/types';
 
 interface MenuImagesProps {
   availableImages: Record<string, string>;
@@ -7,9 +8,10 @@ interface MenuImagesProps {
     weekly: boolean;
     permanent: boolean;
   };
+  ocrData: Record<string, ImageOcrData>;
 }
 
-export default function MenuImages({ availableImages, visibleSections }: MenuImagesProps) {
+export default function MenuImages({ availableImages, visibleSections, ocrData }: MenuImagesProps) {
   const firstVisibleSection = visibleSections.action
     ? 'action'
     : visibleSections.weekly
@@ -23,7 +25,7 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
           <div className="relative w-full h-screen mt-4 mb-4">
             <NextImage
               src={availableImages.action}
-              alt="Akce Letáček"
+              alt={ocrData.action?.altText || 'Akce Letáček'}
               fill
               sizes="100vw"
               priority={firstVisibleSection === 'action'}
@@ -31,6 +33,7 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
               className="shadow-lg"
             />
           </div>
+          {ocrData.action?.fullText && <div className="sr-only">{ocrData.action.fullText}</div>}
         </section>
       )}
 
@@ -39,7 +42,7 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
           <div className="relative w-full h-screen mt-4 mb-4">
             <NextImage
               src={availableImages.weekly}
-              alt="Týdenní Nabídka"
+              alt={ocrData.weekly?.altText || 'Týdenní Nabídka'}
               fill
               sizes="100vw"
               priority={firstVisibleSection === 'weekly'}
@@ -47,6 +50,7 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
               className="shadow-lg"
             />
           </div>
+          {ocrData.weekly?.fullText && <div className="sr-only">{ocrData.weekly.fullText}</div>}
         </section>
       )}
 
@@ -66,9 +70,10 @@ export default function MenuImages({ availableImages, visibleSections }: MenuIma
                     width={800}
                     height={1200}
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    alt={`Stálá Nabídka ${index + 1}`}
+                    alt={ocrData[key]?.altText || `Stálá Nabídka ${index + 1}`}
                     className="h-auto max-h-screen max-w-full object-contain"
                   />
+                  {ocrData[key]?.fullText && <div className="sr-only">{ocrData[key].fullText}</div>}
                 </div>
               )
           )}
