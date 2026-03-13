@@ -8,3 +8,8 @@ export const IMAGE_TYPES = [
 ] as const;
 
 export type ImageType = (typeof IMAGE_TYPES)[number];
+
+export interface ImageOcrData {
+  fullText: string;
+  altText: string;
+}
