@@ -59,10 +59,7 @@ export async function POST(req: NextRequest) {
   allOrders.push(order);
   await saveOrders(allOrders);
 
-  const totalPrice = order.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const totalPrice = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const orderEmail = process.env.ORDER_EMAIL;
   if (!orderEmail) {
