@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack -p 3008",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "npx tsx db/migrate.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
