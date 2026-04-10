@@ -1,28 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { head } from '@vercel/blob';
 import { randomUUID } from 'crypto';
-import { loadOrders, saveOrders } from '@/app/lib/orders';
+import { createOrder } from '@/app/lib/orders';
+import { query } from '@/app/lib/db';
 import type { OrderItem, Order } from '@/app/types';
-
-const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
 async function loadVillages(): Promise<string[]> {
-  try {
-    const blob = await head('delivery-villages.json', { token: BLOB_TOKEN });
-    const res = await fetch(blob.url, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      return data.villages || [];
-    }
-  } catch {
-    // ignore
-  }
-  return [];
+  const rows = await query<{ name: string }>('SELECT name FROM delivery_villages ORDER BY name');
+  return rows.map((r) => r.name);
 }
 
 export async function POST(req: NextRequest) {
@@ -55,9 +44,7 @@ export async function POST(req: NextRequest) {
     createdAt: new Date().toISOString(),
   };
 
-  const allOrders = await loadOrders();
-  allOrders.push(order);
-  await saveOrders(allOrders);
+  await createOrder(order);
 
   const totalPrice = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 

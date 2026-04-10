@@ -1,5 +1,6 @@
 import NextImage from 'next/image';
 import type { ImageOcrData } from '@/app/types';
+import OrderForm from '@/app/components/OrderForm';
 
 interface MenuImagesProps {
   availableImages: Record<string, string>;
@@ -39,16 +40,23 @@ export default function MenuImages({ availableImages, visibleSections, ocrData }
 
       {visibleSections.weekly && availableImages.weekly && (
         <section id="weekly">
-          <div className="relative w-full h-screen mt-4 mb-4">
-            <NextImage
-              src={availableImages.weekly}
-              alt={ocrData.weekly?.altText || 'Týdenní Nabídka'}
-              fill
-              sizes="100vw"
-              priority={firstVisibleSection === 'weekly'}
-              style={{ objectFit: 'contain' }}
-              className="shadow-lg"
-            />
+          <div className="mt-4 mb-4 flex flex-col md:flex-row">
+            <div className="relative w-full md:w-1/2 h-screen">
+              <NextImage
+                src={availableImages.weekly}
+                alt={ocrData.weekly?.altText || 'Týdenní Nabídka'}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority={firstVisibleSection === 'weekly'}
+                style={{ objectFit: 'contain' }}
+                className="shadow-lg"
+              />
+            </div>
+            <div className="w-full md:w-1/2 flex items-start justify-center py-8">
+              <div className="w-full max-w-md">
+                <OrderForm />
+              </div>
+            </div>
           </div>
           {ocrData.weekly?.fullText && <div className="sr-only">{ocrData.weekly.fullText}</div>}
         </section>

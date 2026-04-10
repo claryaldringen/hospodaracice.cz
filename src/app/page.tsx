@@ -1,40 +1,38 @@
 import Footer from '@/app/components/Footer';
 import Navigation from '@/app/components/Navigation';
 import MenuImages from '@/app/components/MenuImages';
+import Gallery from '@/app/components/Gallery';
 import { IMAGE_TYPES, type ImageOcrData } from '@/app/types';
+import { queryOne } from '@/app/lib/db';
+import { fileExists, getPublicUrl } from '@/app/lib/storage';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
-const baseUrl = process.env.NEXT_PUBLIC_BLOB_BASE_URL;
-
-async function checkImageExists(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: 'HEAD', next: { revalidate: 60 } });
-    return res.ok;
-  } catch {
-    return false;
-  }
+async function fetchOpeningHours(): Promise<string | undefined> {
+  const row = await queryOne<{ text: string }>('SELECT text FROM opening_hours WHERE id = 1');
+  return row?.text || undefined;
 }
 
 async function fetchOcrData(type: string): Promise<ImageOcrData | undefined> {
-  try {
-    const res = await fetch(`${baseUrl}/${type}.json`, { next: { revalidate: 60 } });
-    if (res.ok) return await res.json();
-  } catch {
-    // JSON may not exist
-  }
-  return undefined;
+  const row = await queryOne<{ full_text: string; alt_text: string }>(
+    'SELECT full_text, alt_text FROM menu_images WHERE type = $1',
+    [type]
+  );
+  return row ? { fullText: row.full_text, altText: row.alt_text } : undefined;
 }
 
 export default async function HomePage() {
+  const openingHours = await fetchOpeningHours();
+
+  const ts = Date.now();
   const resolved = await Promise.all(
     IMAGE_TYPES.map(async (type) => {
       const [imageUrl, ocrData] = await Promise.all([
         (async () => {
-          const webpUrl = `${baseUrl}/${type}.webp`;
-          if (await checkImageExists(webpUrl)) return webpUrl;
-          const jpgUrl = `${baseUrl}/${type}.jpg`;
-          if (await checkImageExists(jpgUrl)) return jpgUrl;
+          if (await fileExists('menu', `${type}.webp`))
+            return `${getPublicUrl('menu', `${type}.webp`)}?${ts}`;
+          if (await fileExists('menu', `${type}.jpg`))
+            return `${getPublicUrl('menu', `${type}.jpg`)}?${ts}`;
           return null;
         })(),
         fetchOcrData(type),
@@ -68,7 +66,8 @@ export default async function HomePage() {
           visibleSections={visibleSections}
           ocrData={ocrDataMap}
         />
-        <Footer />
+        <Gallery />
+        <Footer openingHours={openingHours} />
       </main>
     </div>
   );
