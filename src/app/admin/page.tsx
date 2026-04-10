@@ -8,7 +8,7 @@ import {
   type Order,
 } from '@/app/types';
 
-const BLOB_BASE_URL = process.env.NEXT_PUBLIC_BLOB_BASE_URL;
+const UPLOADS_URL = process.env.NEXT_PUBLIC_UPLOADS_URL;
 
 const MAX_WIDTH = 1920;
 const WEBP_QUALITY = 0.85;
@@ -115,9 +115,9 @@ export default function AdminPage() {
     const ts = Date.now();
     const results = await Promise.all(
       IMAGE_TYPES.map(async (type) => {
-        const webpUrl = `${BLOB_BASE_URL}/${type}.webp`;
+        const webpUrl = `${UPLOADS_URL}/menu/${type}.webp`;
         if (await checkImageExists(webpUrl)) return [type, `${webpUrl}?${ts}`] as const;
-        const jpgUrl = `${BLOB_BASE_URL}/${type}.jpg`;
+        const jpgUrl = `${UPLOADS_URL}/menu/${type}.jpg`;
         if (await checkImageExists(jpgUrl)) return [type, `${jpgUrl}?${ts}`] as const;
         return [type, null] as const;
       })
@@ -375,7 +375,7 @@ export default function AdminPage() {
     const res = await fetch('/api/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: cleanUrl, type }),
+      body: JSON.stringify({ type }),
     });
 
     if (res.ok) {
