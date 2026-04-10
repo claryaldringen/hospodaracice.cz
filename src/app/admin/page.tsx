@@ -369,9 +369,6 @@ export default function AdminPage() {
   const handleDelete = async (type: ImageType) => {
     if (!images[type]) return;
 
-    // Strip cache-busting query parameter before sending to delete API
-    const cleanUrl = images[type]!.split('?')[0];
-
     const res = await fetch('/api/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
