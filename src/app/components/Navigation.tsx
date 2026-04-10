@@ -26,6 +26,8 @@ export default function Navigation({ visibleImages }: NavigationProps) {
     { id: 'action', label: 'Akce', visible: visibleImages.action },
     { id: 'weekly', label: 'Týdenní Nabídka', visible: visibleImages.weekly },
     { id: 'permanent', label: 'Stálá Nabídka', visible: visibleImages.permanent },
+    { id: 'gallery', label: 'Galerie', visible: true },
+    { id: 'rezervace', label: 'Rezervace', visible: true, href: '/rezervace' },
     { id: 'contact', label: 'Kontakt', visible: true },
   ];
 
@@ -76,7 +78,16 @@ export default function Navigation({ visibleImages }: NavigationProps) {
       >
         {menuItems.map(
           (item) =>
-            item.visible && (
+            item.visible &&
+            ('href' in item && item.href ? (
+              <a
+                key={item.id}
+                href={item.href}
+                className="hover:text-blue-500 cursor-pointer block md:inline text-xl py-3 md:py-0 px-1"
+              >
+                {item.label}
+              </a>
+            ) : (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
@@ -84,7 +95,7 @@ export default function Navigation({ visibleImages }: NavigationProps) {
               >
                 {item.label}
               </button>
-            )
+            ))
         )}
       </nav>
     </header>

@@ -1,4 +1,19 @@
-export default function Footer() {
+const DEFAULT_HOURS = [
+  'Pondělí: ZAVŘENO',
+  'Úterý: 11:00 až 15:00',
+  'Středa: 11:00 až 15:00',
+  'Čtvrtek: 11:00 až 15:00',
+  'Pátek: 11:00 až 23:00',
+  'Sobota: 11:00 až 23:00',
+  'Neděle: 11:00 až 19:00',
+];
+
+export default function Footer({ openingHours }: { openingHours?: string }) {
+  const lines =
+    openingHours && openingHours.trim().length > 0
+      ? openingHours.split('\n').filter((l) => l.trim().length > 0)
+      : DEFAULT_HOURS;
+
   return (
     <footer id="contact" className="bg-white p-6 mt-10">
       <div className="flex flex-col md:flex-row justify-between">
@@ -37,13 +52,9 @@ export default function Footer() {
 
         <div className="w-full md:w-1/3 p-4 space-y-2">
           <h2 className="text-xl font-semibold mb-2">Otevírací doba</h2>
-          <p>Pondělí: ZAVŘENO</p>
-          <p>Úterý: 11:00 až 15:00</p>
-          <p>Středa: 11:00 až 15:00</p>
-          <p>Čtvrtek 11:00 až 15:00</p>
-          <p>Pátek: 11:00 až 23:00</p>
-          <p>Sobota: 11:00 až 23:00</p>
-          <p>Neděle: 11:00 až 19:00</p>
+          {lines.map((line, i) => (
+            <p key={i}>{line}</p>
+          ))}
         </div>
 
         <div className="w-full md:w-1/3 h-64">
