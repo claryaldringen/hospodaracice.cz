@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:migrate": "npx tsx db/migrate.ts",
-    "migrate:data": "npx tsx scripts/migrate-data.ts"
+    "db:migrate": "node --env-file=.env --import tsx db/migrate.ts",
+    "migrate:data": "node --env-file=.env --import tsx scripts/migrate-data.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

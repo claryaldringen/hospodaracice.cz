@@ -58,7 +58,4 @@ CREATE TABLE orders (
 );
 CREATE INDEX idx_orders_date ON orders (date);
 
-CREATE TABLE _migrations (
-    name TEXT PRIMARY KEY,
-    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- _migrations table is created by the migration runner (db/migrate.ts)
