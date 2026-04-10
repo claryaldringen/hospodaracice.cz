@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/app/lib/auth';
-import { loadOrders } from '@/app/lib/orders';
+import { getOrdersByDate } from '@/app/lib/orders';
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated())) {
@@ -12,10 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Parametr date je povinný.' }, { status: 400 });
   }
 
-  const orders = await loadOrders();
-  const filtered = orders
-    .filter((o) => o.date === date)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const orders = await getOrdersByDate(date);
 
-  return NextResponse.json({ orders: filtered });
+  return NextResponse.json({ orders });
 }
