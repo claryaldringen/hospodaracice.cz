@@ -1,7 +1,7 @@
 import { query, queryOne } from './db';
 import type { Reservation } from '@/app/types';
 
-const PENDING_TIMEOUT = "30 minutes";
+const PENDING_TIMEOUT = '30 minutes';
 
 interface ReservationRow {
   id: string;
@@ -39,23 +39,31 @@ export async function createReservation(reservation: Reservation): Promise<void>
   await query(
     `INSERT INTO reservations (id, name, email, seats, date, time_from, time_to, note, status, token, created_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-    [reservation.id, reservation.name, reservation.email, reservation.seats, reservation.date,
-     reservation.timeFrom, reservation.timeTo, reservation.note ?? null, reservation.status,
-     reservation.token, reservation.createdAt]
+    [
+      reservation.id,
+      reservation.name,
+      reservation.email,
+      reservation.seats,
+      reservation.date,
+      reservation.timeFrom,
+      reservation.timeTo,
+      reservation.note ?? null,
+      reservation.status,
+      reservation.token,
+      reservation.createdAt,
+    ]
   );
 }
 
 export async function findByToken(token: string): Promise<Reservation | null> {
-  const row = await queryOne<ReservationRow>(
-    'SELECT * FROM reservations WHERE token = $1', [token]
-  );
+  const row = await queryOne<ReservationRow>('SELECT * FROM reservations WHERE token = $1', [
+    token,
+  ]);
   return row ? mapRow(row) : null;
 }
 
 export async function findById(id: string): Promise<Reservation | null> {
-  const row = await queryOne<ReservationRow>(
-    'SELECT * FROM reservations WHERE id = $1', [id]
-  );
+  const row = await queryOne<ReservationRow>('SELECT * FROM reservations WHERE id = $1', [id]);
   return row ? mapRow(row) : null;
 }
 
@@ -71,7 +79,11 @@ export async function getReservationsByDate(date: string): Promise<Reservation[]
   return rows.map(mapRow);
 }
 
-export async function getReservedSeats(date: string, timeFrom: string, timeTo: string): Promise<number> {
+export async function getReservedSeats(
+  date: string,
+  timeFrom: string,
+  timeTo: string
+): Promise<number> {
   const rows = await query<{ total: string }>(
     `SELECT COALESCE(SUM(seats), 0) as total FROM reservations
      WHERE date = $1 AND time_from < $3 AND time_to > $2 AND ${ACTIVE_CONDITION}`,

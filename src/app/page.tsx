@@ -6,7 +6,7 @@ import { IMAGE_TYPES, type ImageOcrData } from '@/app/types';
 import { queryOne } from '@/app/lib/db';
 import { fileExists, getPublicUrl } from '@/app/lib/storage';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 async function fetchOpeningHours(): Promise<string | undefined> {
   const row = await queryOne<{ text: string }>('SELECT text FROM opening_hours WHERE id = 1');

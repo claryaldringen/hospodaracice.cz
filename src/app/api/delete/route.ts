@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
   if (type === 'weekly') {
     await query(
-      "INSERT INTO weekly_menu (id, data) VALUES (1, '{\"days\":[]}'::jsonb) ON CONFLICT (id) DO UPDATE SET data = '{\"days\":[]}'::jsonb"
+      'INSERT INTO weekly_menu (id, data) VALUES (1, \'{"days":[]}\'::jsonb) ON CONFLICT (id) DO UPDATE SET data = \'{"days":[]}\'::jsonb'
     );
   }
 

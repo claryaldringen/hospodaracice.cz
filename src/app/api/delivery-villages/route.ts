@@ -20,7 +20,9 @@ export async function POST(req: NextRequest) {
 
   await query('DELETE FROM delivery_villages');
   for (const name of list) {
-    await query('INSERT INTO delivery_villages (name) VALUES ($1) ON CONFLICT (name) DO NOTHING', [name]);
+    await query('INSERT INTO delivery_villages (name) VALUES ($1) ON CONFLICT (name) DO NOTHING', [
+      name,
+    ]);
   }
 
   return NextResponse.json({ ok: true });
