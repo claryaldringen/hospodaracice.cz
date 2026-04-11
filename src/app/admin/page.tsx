@@ -401,22 +401,12 @@ export default function AdminPage() {
   const summaryRows = Object.values(orderSummary);
   const summaryTotal = summaryRows.reduce((sum, r) => sum + r.totalPrice, 0);
 
-  // Village view: group items by village
-  const ordersByVillage = orders.reduce<Record<string, { name: string; quantity: number }[]>>(
-    (acc, order) => {
-      if (!acc[order.village]) acc[order.village] = [];
-      for (const item of order.items) {
-        const existing = acc[order.village].find((r) => r.name === item.name);
-        if (existing) {
-          existing.quantity += item.quantity;
-        } else {
-          acc[order.village].push({ name: item.name, quantity: item.quantity });
-        }
-      }
-      return acc;
-    },
-    {}
-  );
+  // Village view: group full orders by village
+  const ordersByVillage = orders.reduce<Record<string, Order[]>>((acc, order) => {
+    if (!acc[order.village]) acc[order.village] = [];
+    acc[order.village].push(order);
+    return acc;
+  }, {});
 
   // --- Login screen ---
   if (!isAuthenticated) {
@@ -888,22 +878,53 @@ export default function AdminPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {Object.entries(ordersByVillage)
                   .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([villageName, items]) => (
+                  .map(([villageName, villageOrders]) => (
                     <div key={villageName}>
-                      <h3 className="mb-1 text-sm font-semibold text-gray-900">{villageName}</h3>
-                      <table className="w-full text-sm">
-                        <tbody>
-                          {items.map((item) => (
-                            <tr key={item.name} className="border-b border-gray-100">
-                              <td className="py-1.5 text-gray-700">{item.name}</td>
-                              <td className="py-1.5 text-right text-gray-600">{item.quantity}x</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      <h3 className="mb-2 text-sm font-semibold text-gray-900">
+                        {villageName} ({villageOrders.length}{' '}
+                        {villageOrders.length === 1
+                          ? 'objednávka'
+                          : villageOrders.length < 5
+                            ? 'objednávky'
+                            : 'objednávek'}
+                        )
+                      </h3>
+                      <div className="space-y-3">
+                        {villageOrders.map((order) => (
+                          <div
+                            key={order.id}
+                            className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm"
+                          >
+                            <div className="mb-1 font-medium text-gray-900">
+                              {order.name} — {order.phone}
+                            </div>
+                            <div className="mb-2 text-gray-600">{order.address}</div>
+                            <table className="w-full">
+                              <tbody>
+                                {order.items.map((item, i) => (
+                                  <tr key={i} className="border-b border-gray-100 last:border-0">
+                                    <td className="py-1 text-gray-700">{item.name}</td>
+                                    <td className="py-1 text-center text-gray-600">
+                                      {item.quantity}x
+                                    </td>
+                                    <td className="py-1 text-right text-gray-600">
+                                      {item.price * item.quantity} Kč
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {order.note && (
+                              <div className="mt-2 text-xs text-gray-500">
+                                Poznámka: {order.note}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
               </div>
