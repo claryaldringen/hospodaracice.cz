@@ -77,6 +77,7 @@ export default function AdminPage() {
   const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10));
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderView, setOrderView] = useState<'summary' | 'village'>('summary');
+  const [orderCounts, setOrderCounts] = useState<Record<string, number>>({});
   const [images, setImages] = useState<Record<ImageType, string | null>>(
     Object.fromEntries(IMAGE_TYPES.map((type) => [type, null])) as Record<ImageType, string | null>
   );
@@ -277,9 +278,30 @@ export default function AdminPage() {
     }
   }, []);
 
+  const loadOrderCounts = useCallback(async () => {
+    try {
+      const from = new Date();
+      from.setDate(from.getDate() - 7);
+      const to = new Date();
+      to.setDate(to.getDate() + 7);
+      const res = await fetch(
+        `/api/orders/counts?from=${from.toISOString().slice(0, 10)}&to=${to.toISOString().slice(0, 10)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setOrderCounts(data.counts || {});
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
-    if (isAuthenticated) loadOrders(orderDate);
-  }, [isAuthenticated, orderDate, loadOrders]);
+    if (isAuthenticated) {
+      loadOrders(orderDate);
+      loadOrderCounts();
+    }
+  }, [isAuthenticated, orderDate, loadOrders, loadOrderCounts]);
 
   const handleCancelReservation = async (id: string) => {
     const res = await fetch('/api/reservations/admin-cancel', {
@@ -811,14 +833,15 @@ export default function AdminPage() {
                 const d = new Date();
                 d.setDate(d.getDate() + i - 7);
                 const val = d.toISOString().slice(0, 10);
+                const count = orderCounts[val] || 0;
                 const label = d.toLocaleDateString('cs-CZ', {
                   weekday: 'short',
                   day: 'numeric',
                   month: 'numeric',
                 });
                 return (
-                  <option key={val} value={val}>
-                    {label}
+                  <option key={val} value={val} disabled={count === 0}>
+                    {label} {count > 0 ? `(${count})` : ''}
                   </option>
                 );
               })}
