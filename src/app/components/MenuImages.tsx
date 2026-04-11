@@ -1,4 +1,3 @@
-import NextImage from 'next/image';
 import type { ImageOcrData } from '@/app/types';
 import OrderForm from '@/app/components/OrderForm';
 
@@ -13,25 +12,17 @@ interface MenuImagesProps {
 }
 
 export default function MenuImages({ availableImages, visibleSections, ocrData }: MenuImagesProps) {
-  const firstVisibleSection = visibleSections.action
-    ? 'action'
-    : visibleSections.weekly
-      ? 'weekly'
-      : null;
-
   return (
     <>
       {visibleSections.action && availableImages.action && (
         <section id="action">
-          <div className="relative w-full h-screen mt-4 mb-4">
-            <NextImage
+          <div className="relative w-full h-screen mt-4 mb-4 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={availableImages.action}
               alt={ocrData.action?.altText || 'Akce Letáček'}
-              fill
-              sizes="100vw"
-              priority={firstVisibleSection === 'action'}
-              style={{ objectFit: 'contain' }}
-              className="shadow-lg"
+              className="max-h-full max-w-full object-contain shadow-lg"
+              loading="eager"
             />
           </div>
           {ocrData.action?.fullText && <div className="sr-only">{ocrData.action.fullText}</div>}
@@ -41,15 +32,13 @@ export default function MenuImages({ availableImages, visibleSections, ocrData }
       {visibleSections.weekly && availableImages.weekly && (
         <section id="weekly">
           <div className="mt-4 mb-4 flex flex-col md:flex-row">
-            <div className="relative w-full md:w-1/2 h-screen">
-              <NextImage
+            <div className="relative w-full md:w-1/2 h-screen flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={availableImages.weekly}
                 alt={ocrData.weekly?.altText || 'Týdenní Nabídka'}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority={firstVisibleSection === 'weekly'}
-                style={{ objectFit: 'contain' }}
-                className="shadow-lg"
+                className="max-h-full max-w-full object-contain shadow-lg"
+                loading="eager"
               />
             </div>
             <div className="w-full md:w-1/2 flex items-start justify-center py-8">
@@ -82,13 +71,12 @@ export default function MenuImages({ availableImages, visibleSections, ocrData }
                     index % 2 === 0 ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  <NextImage
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={availableImages[key]}
-                    width={800}
-                    height={1200}
-                    sizes="(max-width: 768px) 100vw, 50vw"
                     alt={ocrData[key]?.altText || `Stálá Nabídka ${index + 1}`}
                     className="h-auto max-h-screen max-w-full object-contain"
+                    loading="lazy"
                   />
                   {ocrData[key]?.fullText && <div className="sr-only">{ocrData[key].fullText}</div>}
                 </div>
