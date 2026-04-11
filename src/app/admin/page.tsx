@@ -812,12 +812,27 @@ export default function AdminPage() {
         <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
             <h2 className="font-semibold text-gray-900">Objednávky</h2>
-            <input
-              type="date"
+            <select
               value={orderDate}
               onChange={(e) => setOrderDate(e.target.value)}
               className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
+            >
+              {Array.from({ length: 15 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() + i - 7);
+                const val = d.toISOString().slice(0, 10);
+                const label = d.toLocaleDateString('cs-CZ', {
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'numeric',
+                });
+                return (
+                  <option key={val} value={val}>
+                    {label}
+                  </option>
+                );
+              })}
+            </select>
           </div>
 
           {/* View toggle */}
