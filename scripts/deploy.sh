@@ -25,8 +25,7 @@ cp -r .next/static .next/standalone/.next/static
 cp -r public .next/standalone/public
 
 echo "Restarting application..."
-pm2 restart hospodaracice 2>/dev/null || pm2 start .next/standalone/server.js \
-  --name hospodaracice \
-  -- -p 3002
+pm2 restart hospodaracice 2>/dev/null || PORT=3002 pm2 start .next/standalone/server.js \
+  --name hospodaracice
 
 echo "=== Deploy complete ==="
