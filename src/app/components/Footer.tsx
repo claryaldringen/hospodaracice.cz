@@ -68,6 +68,15 @@ export default function Footer({ openingHours }: { openingHours?: string }) {
           />
         </div>
       </div>
+
+      <div className="border-t border-gray-200 mt-6 pt-4 px-4 text-center text-sm text-gray-500">
+        <p>Provozovatel: Obec Račice, IČO: 16981901 | Račice 65, 270 24 Račice</p>
+        <p className="mt-1">
+          <a href="/ochrana-osobnich-udaju" className="text-blue-500 hover:underline">
+            Ochrana osobních údajů
+          </a>
+        </p>
+      </div>
     </footer>
   );
 }
