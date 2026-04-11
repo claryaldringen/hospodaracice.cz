@@ -44,6 +44,7 @@ function ReservationContent() {
   const [timeFrom, setTimeFrom] = useState('18:00');
   const [timeTo, setTimeTo] = useState('20:00');
   const [note, setNote] = useState('');
+  const [gdprConsent, setGdprConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [availability, setAvailability] = useState<AvailabilityData | null>(null);
@@ -314,10 +315,31 @@ function ReservationContent() {
             </div>
           )}
 
+          <label className="mt-4 flex items-start gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={gdprConsent}
+              onChange={(e) => setGdprConsent(e.target.checked)}
+              required
+              className="mt-0.5"
+            />
+            <span>
+              Souhlasím se{' '}
+              <a
+                href="/ochrana-osobnich-udaju"
+                target="_blank"
+                className="text-blue-500 underline hover:text-blue-700"
+              >
+                zpracováním osobních údajů
+              </a>{' '}
+              za účelem vyřízení rezervace.
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={submitting}
-            className="mt-6 w-full rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white shadow transition hover:bg-gray-800 active:bg-gray-950 disabled:opacity-50"
+            disabled={submitting || !gdprConsent}
+            className="mt-4 w-full rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white shadow transition hover:bg-gray-800 active:bg-gray-950 disabled:opacity-50"
           >
             {submitting ? 'Odesílání…' : 'Rezervovat'}
           </button>

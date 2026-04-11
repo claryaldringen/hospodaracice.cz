@@ -14,6 +14,7 @@ export default function OrderForm() {
   const [address, setAddress] = useState('');
   const [village, setVillage] = useState('');
   const [note, setNote] = useState('');
+  const [gdprConsent, setGdprConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -256,9 +257,30 @@ export default function OrderForm() {
               className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
             />
           </div>
+          <label className="mt-4 flex items-start gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={gdprConsent}
+              onChange={(e) => setGdprConsent(e.target.checked)}
+              required
+              className="mt-0.5"
+            />
+            <span>
+              Souhlasím se{' '}
+              <a
+                href="/ochrana-osobnich-udaju"
+                target="_blank"
+                className="text-blue-400 underline hover:text-blue-300"
+              >
+                zpracováním osobních údajů
+              </a>{' '}
+              za účelem vyřízení objednávky.
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={submitting || orderItems.length === 0}
+            disabled={submitting || orderItems.length === 0 || !gdprConsent}
             className="mt-4 w-full rounded-lg bg-white py-2.5 text-sm font-medium text-gray-900 shadow transition hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50"
           >
             {submitting ? 'Odesílání…' : `Objednat (${totalPrice} Kč)`}

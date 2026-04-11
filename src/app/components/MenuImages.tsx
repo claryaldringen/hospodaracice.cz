@@ -62,6 +62,15 @@ export default function MenuImages({ availableImages, visibleSections, ocrData }
         </section>
       )}
 
+      {(visibleSections.action || visibleSections.weekly) && (
+        <p className="px-4 py-2 text-center text-sm text-gray-400">
+          Informace o alergenech podáme na vyžádání — tel.{' '}
+          <a href="tel:+420702181247" className="underline hover:text-white">
+            702 181 247
+          </a>
+        </p>
+      )}
+
       {visibleSections.permanent && (
         <section id="permanent" className="grid grid-cols-1 md:grid-cols-2">
           {['permanent1', 'permanent2', 'permanent3', 'permanent4'].map(
