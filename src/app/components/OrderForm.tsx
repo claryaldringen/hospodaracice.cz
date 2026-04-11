@@ -42,9 +42,10 @@ export default function OrderForm() {
 
   const availableDays =
     menu?.days.filter((d) => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      return d.date >= tomorrow.toISOString().slice(0, 10);
+      // Deadline: den předem v 10:00
+      const deadline = new Date(d.date + 'T10:00:00');
+      deadline.setDate(deadline.getDate() - 1);
+      return new Date() < deadline;
     }) || [];
 
   function formatDate(dateStr: string) {
