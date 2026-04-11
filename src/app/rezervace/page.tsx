@@ -81,6 +81,7 @@ function ReservationContent() {
           type: 'success',
           text: 'Rezervace vytvořena! Zkontrolujte svůj email a potvrďte ji.',
         });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setName('');
         setEmail('');
         setSeats(2);

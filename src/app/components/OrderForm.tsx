@@ -114,6 +114,7 @@ export default function OrderForm() {
 
       if (res.ok) {
         setResult({ type: 'success', text: 'Objednávka odeslána!' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setName('');
         setPhone('');
         setAddress('');
