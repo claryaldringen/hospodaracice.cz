@@ -98,6 +98,14 @@ export default function AdminPage() {
     permanent4: null,
   });
 
+  useEffect(() => {
+    fetch('/api/auth', { method: 'GET' })
+      .then((res) => {
+        if (res.ok) setIsAuthenticated(true);
+      })
+      .catch(() => {});
+  }, []);
+
   const showStatus = (type: 'success' | 'error', text: string) => {
     setStatusMessage({ type, text });
     setTimeout(() => setStatusMessage(null), 3000);

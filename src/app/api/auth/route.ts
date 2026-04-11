@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from '@/app/lib/auth';
+import {
+  createSessionToken,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE,
+  isAuthenticated,
+} from '@/app/lib/auth';
+
+export async function GET() {
+  if (await isAuthenticated()) {
+    return NextResponse.json({ authenticated: true });
+  }
+  return NextResponse.json({ authenticated: false }, { status: 401 });
+}
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
