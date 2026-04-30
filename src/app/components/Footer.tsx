@@ -23,8 +23,8 @@ export default function Footer({ openingHours }: { openingHours?: string }) {
           <p>Adresa: Račice 42, 270 24 Račice</p>
           <p>
             Telefon:{' '}
-            <a href="tel:+420702181347" className="text-blue-500 hover:underline">
-              +420 702 181 347
+            <a href="tel:+420702181247" className="text-blue-500 hover:underline">
+              +420 702 181 247
             </a>
             ,{' '}
             <a href="tel:+420603263291" className="text-blue-500 hover:underline">
