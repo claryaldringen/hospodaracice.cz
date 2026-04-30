@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local dev: uploads dir + symlink for serving via Next dev
+/uploads
+/public/uploads
+
+# playwright mcp artifacts
+/.playwright-mcp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { isAuthenticated } from '@/app/lib/auth';
 import { saveFile, getPublicUrl } from '@/app/lib/storage';
 import { query } from '@/app/lib/db';
+import { isValidWeekKey } from '@/app/lib/week';
 import type { WeeklyMenu } from '@/app/types';
 
 function createAltText(fullText: string): string {
@@ -71,12 +72,25 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get('file') as File;
   const type = formData.get('type') as string;
+  const week = formData.get('week') as string | null;
 
   if (!file || !type) {
     return NextResponse.json({ message: 'File or type not provided' }, { status: 400 });
   }
 
-  const filename = `${type}.webp`;
+  if (type === 'weekly') {
+    if (!week || !isValidWeekKey(week)) {
+      return NextResponse.json(
+        {
+          message:
+            'Pro týdenní nabídku je nutné zadat platný týden (pondělí ve formátu YYYY-MM-DD).',
+        },
+        { status: 400 }
+      );
+    }
+  }
+
+  const filename = type === 'weekly' ? `weekly-${week}.webp` : `${type}.webp`;
   const imageBuffer = Buffer.from(await file.arrayBuffer());
 
   await saveFile('menu', filename, imageBuffer);
@@ -84,21 +98,24 @@ export async function POST(req: NextRequest) {
   const url = getPublicUrl('menu', filename);
   let menuSaved = false;
 
-  if (type === 'weekly') {
+  if (type === 'weekly' && week) {
     const menu = await extractMenu(imageBuffer);
     if (menu) {
-      await query(
-        'INSERT INTO weekly_menu (id, data) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET data = $1',
-        [JSON.stringify(menu)]
-      );
-      menuSaved = true;
-
       const fullText = menuToText(menu);
       const altText = createAltText(fullText);
       await query(
-        `INSERT INTO menu_images (type, full_text, alt_text) VALUES ($1, $2, $3)
-         ON CONFLICT (type) DO UPDATE SET full_text = $2, alt_text = $3`,
-        [type, fullText, altText]
+        `INSERT INTO weekly_menu (week_start, data, full_text, alt_text)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (week_start) DO UPDATE SET data = $2, full_text = $3, alt_text = $4`,
+        [week, JSON.stringify(menu), fullText, altText]
+      );
+      menuSaved = true;
+    } else {
+      await query(
+        `INSERT INTO weekly_menu (week_start, data)
+         VALUES ($1, '{"days":[]}'::jsonb)
+         ON CONFLICT (week_start) DO NOTHING`,
+        [week]
       );
     }
   }

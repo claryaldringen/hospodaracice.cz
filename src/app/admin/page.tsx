@@ -7,6 +7,7 @@ import {
   type GalleryItem,
   type Order,
 } from '@/app/types';
+import { getWeekOptions, getCurrentWeekKey } from '@/app/lib/week';
 
 const UPLOADS_URL = process.env.NEXT_PUBLIC_UPLOADS_URL;
 
@@ -78,6 +79,9 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderView, setOrderView] = useState<'summary' | 'village'>('summary');
   const [orderCounts, setOrderCounts] = useState<Record<string, number>>({});
+  const [selectedWeek, setSelectedWeek] = useState(() => getCurrentWeekKey());
+  const [uploadedWeeks, setUploadedWeeks] = useState<Set<string>>(new Set());
+  const weekOptions = getWeekOptions();
   const [images, setImages] = useState<Record<ImageType, string | null>>(
     Object.fromEntries(IMAGE_TYPES.map((type) => [type, null])) as Record<ImageType, string | null>
   );
@@ -124,6 +128,11 @@ export default function AdminPage() {
     const ts = Date.now();
     const results = await Promise.all(
       IMAGE_TYPES.map(async (type) => {
+        if (type === 'weekly') {
+          const webpUrl = `${UPLOADS_URL}/menu/weekly-${selectedWeek}.webp`;
+          if (await checkImageExists(webpUrl)) return [type, `${webpUrl}?${ts}`] as const;
+          return [type, null] as const;
+        }
         const webpUrl = `${UPLOADS_URL}/menu/${type}.webp`;
         if (await checkImageExists(webpUrl)) return [type, `${webpUrl}?${ts}`] as const;
         const jpgUrl = `${UPLOADS_URL}/menu/${type}.jpg`;
@@ -139,6 +148,18 @@ export default function AdminPage() {
     }
     setImages(newImages as Record<ImageType, string | null>);
     setExistingImages(newExists as Record<ImageType, boolean>);
+  }, [selectedWeek]);
+
+  const loadUploadedWeeks = useCallback(async () => {
+    try {
+      const res = await fetch('/api/menu/weeks');
+      if (res.ok) {
+        const data = await res.json();
+        setUploadedWeeks(new Set<string>(data.weeks || []));
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
   const loadOpeningHours = useCallback(async () => {
@@ -186,6 +207,10 @@ export default function AdminPage() {
     loadVillages();
     loadGallery();
   }, [resolveImages, loadOpeningHours, loadVillages, loadGallery]);
+
+  useEffect(() => {
+    if (isAuthenticated) loadUploadedWeeks();
+  }, [isAuthenticated, loadUploadedWeeks]);
 
   const handleLogin = async () => {
     try {
@@ -241,6 +266,7 @@ export default function AdminPage() {
     const formData = new FormData();
     formData.append('file', processed, `${type}.webp`);
     formData.append('type', type);
+    if (type === 'weekly') formData.append('week', selectedWeek);
 
     const res = await fetch('/api/upload', {
       method: 'POST',
@@ -252,6 +278,7 @@ export default function AdminPage() {
       URL.revokeObjectURL(previewUrl);
       setImages((prev) => ({ ...prev, [type]: `${data.url}?${new Date().getTime()}` }));
       showStatus('success', 'Soubor úspěšně nahrán!');
+      if (type === 'weekly') loadUploadedWeeks();
     } else {
       URL.revokeObjectURL(previewUrl);
       showStatus('error', 'Chyba při nahrávání souboru.');
@@ -399,16 +426,20 @@ export default function AdminPage() {
   const handleDelete = async (type: ImageType) => {
     if (!images[type]) return;
 
+    const body: Record<string, string> = { type };
+    if (type === 'weekly') body.week = selectedWeek;
+
     const res = await fetch('/api/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type }),
+      body: JSON.stringify(body),
     });
 
     if (res.ok) {
       setImages((prev) => ({ ...prev, [type]: null }));
       setExistingImages((prev) => ({ ...prev, [type]: false }));
       showStatus('success', `Obrázek „${IMAGE_LABELS[type]}" byl odstraněn!`);
+      if (type === 'weekly') loadUploadedWeeks();
     } else {
       showStatus('error', 'Chyba při mazání souboru.');
     }
@@ -593,6 +624,31 @@ export default function AdminPage() {
               <div className="border-b border-gray-100 px-5 py-3">
                 <h2 className="font-semibold text-gray-900">{IMAGE_LABELS[type]}</h2>
               </div>
+
+              {/* Week selector (weekly only) */}
+              {type === 'weekly' && (
+                <div className="border-b border-gray-100 bg-gray-50 px-5 py-3">
+                  <label
+                    htmlFor="weekly-week-select"
+                    className="mb-1 block text-xs font-medium text-gray-500"
+                  >
+                    Týden
+                  </label>
+                  <select
+                    id="weekly-week-select"
+                    value={selectedWeek}
+                    onChange={(e) => setSelectedWeek(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    {weekOptions.map((opt) => (
+                      <option key={opt.key} value={opt.key}>
+                        {opt.label}
+                        {uploadedWeeks.has(opt.key) ? ' — nahráno' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Image preview */}
               <div className="relative px-5 pt-4">

@@ -57,7 +57,7 @@ const jsonLd = {
   '@type': 'Restaurant',
   name: 'Hospoda Na Palouku',
   url: 'https://hospodaracice.cz',
-  telephone: ['+420 702 181 347', '+420 603 263 291'],
+  telephone: ['+420 702 181 247', '+420 603 263 291'],
   email: 'hospoda@obec-racice.cz',
   servesCuisine: 'Česká kuchyně',
   address: {
