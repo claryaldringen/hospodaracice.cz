@@ -20,10 +20,6 @@ npm run db:migrate
 echo "Building application..."
 npm run build
 
-# Copy static files to standalone
-cp -r .next/static .next/standalone/.next/static
-cp -r public .next/standalone/public
-
 echo "Restarting application..."
 pm2 restart hospodaracice 2>/dev/null || PORT=3002 pm2 start .next/standalone/server.js \
   --name hospodaracice

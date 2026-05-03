@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack -p 3008",
     "build": "next build",
+    "postbuild": "node scripts/copy-standalone-assets.mjs",
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "node --env-file=.env --import tsx db/migrate.ts",
