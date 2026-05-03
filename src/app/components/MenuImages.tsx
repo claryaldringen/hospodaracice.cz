@@ -1,5 +1,5 @@
-import type { ImageOcrData } from '@/app/types';
-import OrderForm from '@/app/components/OrderForm';
+import type { ImageOcrData, WeeklyTabData } from '@/app/types';
+import WeeklyMenuTabs from '@/app/components/WeeklyMenuTabs';
 
 interface MenuImagesProps {
   availableImages: Record<string, string>;
@@ -9,9 +9,18 @@ interface MenuImagesProps {
     permanent: boolean;
   };
   ocrData: Record<string, ImageOcrData>;
+  weeklyData: {
+    current: WeeklyTabData | null;
+    next: WeeklyTabData | null;
+  };
 }
 
-export default function MenuImages({ availableImages, visibleSections, ocrData }: MenuImagesProps) {
+export default function MenuImages({
+  availableImages,
+  visibleSections,
+  ocrData,
+  weeklyData,
+}: MenuImagesProps) {
   return (
     <>
       {visibleSections.action && availableImages.action && (
@@ -29,25 +38,9 @@ export default function MenuImages({ availableImages, visibleSections, ocrData }
         </section>
       )}
 
-      {visibleSections.weekly && availableImages.weekly && (
+      {visibleSections.weekly && (
         <section id="weekly">
-          <div className="mt-4 mb-4 flex flex-col md:flex-row">
-            <div className="relative w-full md:w-1/2 h-screen flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={availableImages.weekly}
-                alt={ocrData.weekly?.altText || 'Týdenní Nabídka'}
-                className="max-h-full max-w-full object-contain shadow-lg"
-                loading="eager"
-              />
-            </div>
-            <div className="w-full md:w-1/2 flex items-start justify-center py-8">
-              <div className="w-full max-w-md">
-                <OrderForm />
-              </div>
-            </div>
-          </div>
-          {ocrData.weekly?.fullText && <div className="sr-only">{ocrData.weekly.fullText}</div>}
+          <WeeklyMenuTabs current={weeklyData.current} next={weeklyData.next} />
         </section>
       )}
 
