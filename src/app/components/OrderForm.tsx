@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { WeeklyMenu, MenuDay, OrderItem } from '@/app/types';
+import type { MenuDay, OrderItem } from '@/app/types';
 
-export default function OrderForm() {
-  const [menu, setMenu] = useState<WeeklyMenu | null>(null);
+interface OrderFormProps {
+  days: MenuDay[];
+}
+
+export default function OrderForm({ days }: OrderFormProps) {
   const [villages, setVillages] = useState<string[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedDay, setSelectedDay] = useState<MenuDay | null>(null);
@@ -18,15 +21,8 @@ export default function OrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadData = useCallback(async () => {
-    const [menuRes, villagesRes] = await Promise.all([
-      fetch('/api/menu'),
-      fetch('/api/delivery-villages'),
-    ]);
-    if (menuRes.ok) {
-      const data = await menuRes.json();
-      setMenu(data);
-    }
+  const loadVillages = useCallback(async () => {
+    const villagesRes = await fetch('/api/delivery-villages');
     if (villagesRes.ok) {
       const data = await villagesRes.json();
       setVillages(data.villages || []);
@@ -37,16 +33,15 @@ export default function OrderForm() {
   }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadVillages();
+  }, [loadVillages]);
 
-  const availableDays =
-    menu?.days.filter((d) => {
-      // Deadline: den předem v 10:00
-      const deadline = new Date(d.date + 'T10:00:00');
-      deadline.setDate(deadline.getDate() - 1);
-      return new Date() < deadline;
-    }) || [];
+  useEffect(() => {
+    if (selectedDay && !days.some((d) => d.date === selectedDay.date)) {
+      setSelectedDay(null);
+      setQuantities({});
+    }
+  }, [days, selectedDay]);
 
   function formatDate(dateStr: string) {
     const [, m, d] = dateStr.split('-');
@@ -131,7 +126,7 @@ export default function OrderForm() {
     }
   };
 
-  if (!menu || availableDays.length === 0) {
+  if (days.length === 0) {
     return null;
   }
 
@@ -151,7 +146,7 @@ export default function OrderForm() {
 
       {/* Day selection */}
       <div className="mb-4 flex flex-wrap gap-2">
-        {availableDays.map((day) => (
+        {days.map((day) => (
           <button
             key={day.date}
             onClick={() => handleSelectDay(day)}

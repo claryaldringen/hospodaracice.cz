@@ -43,6 +43,14 @@ export interface WeeklyMenu {
   days: MenuDay[];
 }
 
+export interface WeeklyTabData {
+  weekKey: string;
+  weekRange: string;
+  imageUrl: string;
+  ocrData?: ImageOcrData;
+  days: MenuDay[];
+}
+
 export interface OrderItem {
   name: string;
   price: number;
