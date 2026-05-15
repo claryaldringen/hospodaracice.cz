@@ -48,10 +48,15 @@ export async function POST(req: Request) {
 
   const filename = `action-${inserted.id}.webp`;
   const buffer = Buffer.from(await file.arrayBuffer());
-  await saveFile('menu', filename, buffer);
+  try {
+    await saveFile('menu', filename, buffer);
+  } catch {
+    await query('DELETE FROM action_posters WHERE id = $1', [inserted.id]);
+    return NextResponse.json({ message: 'Failed to save file' }, { status: 500 });
+  }
 
-  await queryOne(
-    'UPDATE action_posters SET filename = $1 WHERE id = $2 RETURNING id',
+  await query(
+    'UPDATE action_posters SET filename = $1 WHERE id = $2',
     [filename, inserted.id]
   );
 
