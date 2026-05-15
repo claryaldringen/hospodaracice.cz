@@ -16,7 +16,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { ActionPoster } from '@/app/types';
@@ -28,7 +28,13 @@ interface Props {
   onStatus: (type: 'success' | 'error', text: string) => void;
 }
 
-function PosterRow({ poster, onDelete }: { poster: ActionPoster; onDelete: (id: number) => void }) {
+function PosterCard({
+  poster,
+  onDelete,
+}: {
+  poster: ActionPoster;
+  onDelete: (id: number) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: poster.id,
   });
@@ -37,40 +43,36 @@ function PosterRow({ poster, onDelete }: { poster: ActionPoster; onDelete: (id: 
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
-  const ts = Date.now();
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded p-2"
+      {...attributes}
+      {...listeners}
+      className="relative aspect-[0.707] bg-gray-100 border border-gray-200 rounded overflow-hidden cursor-grab touch-none"
     >
-      <button
-        type="button"
-        {...attributes}
-        {...listeners}
-        className="cursor-grab touch-none px-2 text-gray-400 hover:text-gray-700"
-        aria-label="Přesunout"
-      >
-        ≡
-      </button>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={`${UPLOADS_URL}/menu/${poster.filename}?${ts}`}
+        src={`${UPLOADS_URL}/menu/${poster.filename}`}
         alt={poster.altText}
-        className="h-24 w-auto object-contain"
+        className="h-full w-full object-contain"
         loading="lazy"
       />
-      <div className="flex-1 text-sm text-gray-700">
-        #{poster.position} — {poster.altText}
-      </div>
       <button
         type="button"
-        onClick={() => onDelete(poster.id)}
-        className="px-3 py-1 text-red-500 hover:text-red-700"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(poster.id);
+        }}
+        className="absolute top-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-red-500 shadow hover:bg-red-50 hover:text-red-700"
         aria-label="Smazat plakát"
       >
         ✕
       </button>
+      <div className="absolute bottom-1 left-1 rounded bg-white/90 px-2 py-0.5 text-xs text-gray-700">
+        #{poster.position}
+      </div>
     </div>
   );
 }
@@ -99,21 +101,35 @@ export default function ActionPostersAdmin({ onStatus }: Props) {
   }, [load]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     e.target.value = '';
     setUploading(true);
+    let uploaded = 0;
     try {
-      const processed = await processImage(file);
-      const formData = new FormData();
-      formData.append('file', processed, 'poster.webp');
-      const res = await fetch('/api/action-posters', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('upload failed');
-      const data = (await res.json()) as ActionPoster;
-      setPosters((prev) => [...prev, data]);
-      onStatus('success', 'Plakát nahrán.');
+      // Sequential upload — POST computes position = MAX+1 server-side, parallel
+      // uploads would race and produce duplicate positions.
+      for (const file of files) {
+        const processed = await processImage(file);
+        const formData = new FormData();
+        formData.append('file', processed, 'poster.webp');
+        const res = await fetch('/api/action-posters', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('upload failed');
+        const data = (await res.json()) as ActionPoster;
+        setPosters((prev) => [...prev, data]);
+        uploaded++;
+      }
+      onStatus(
+        'success',
+        files.length === 1 ? 'Plakát nahrán.' : `Nahráno ${uploaded} plakátů.`
+      );
     } catch {
-      onStatus('error', 'Chyba při nahrávání plakátu.');
+      onStatus(
+        'error',
+        uploaded === 0
+          ? 'Chyba při nahrávání plakátu.'
+          : `Nahráno ${uploaded} z ${files.length}, zbytek selhal.`
+      );
     } finally {
       setUploading(false);
     }
@@ -172,6 +188,7 @@ export default function ActionPostersAdmin({ onStatus }: Props) {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={handleUpload}
         />
@@ -180,10 +197,10 @@ export default function ActionPostersAdmin({ onStatus }: Props) {
         <p className="text-gray-500 text-sm">Žádné plakáty zatím nejsou.</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={posters.map((p) => p.id)} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-2">
+          <SortableContext items={posters.map((p) => p.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {posters.map((p) => (
-                <PosterRow key={p.id} poster={p} onDelete={handleDelete} />
+                <PosterCard key={p.id} poster={p} onDelete={handleDelete} />
               ))}
             </div>
           </SortableContext>
