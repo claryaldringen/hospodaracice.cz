@@ -7,7 +7,7 @@ import {
   type GalleryItem,
   type Order,
 } from '@/app/types';
-import { getWeekOptions, getCurrentWeekKey } from '@/app/lib/week';
+import { getWeekOptions, getCurrentWeekKey, formatWeekRange, parseWeekKey } from '@/app/lib/week';
 import { processImage } from '@/app/admin/processImage';
 import ActionPostersAdmin from '@/app/admin/ActionPostersAdmin';
 
@@ -239,9 +239,32 @@ export default function AdminPage() {
     if (res.ok) {
       const data = await res.json();
       URL.revokeObjectURL(previewUrl);
-      setImages((prev) => ({ ...prev, [type]: `${data.url}?${new Date().getTime()}` }));
-      showStatus('success', 'Soubor úspěšně nahrán!');
-      if (type === 'weekly') loadUploadedWeeks();
+
+      if (type === 'weekly') {
+        const adminRange = formatWeekRange(parseWeekKey(data.adminWeek));
+        const effectiveRange = formatWeekRange(parseWeekKey(data.effectiveWeek));
+
+        if (data.rerouted) {
+          showStatus(
+            'success',
+            `Jídelníček patří do týdne ${effectiveRange} (vybral jsi ${adminRange}), uloženo tam.`
+          );
+          setSelectedWeek(data.effectiveWeek);
+        } else if (data.detectedWeek === null) {
+          showStatus(
+            'success',
+            `Týden se z obrázku nepodařilo rozpoznat, uloženo dle výběru (${adminRange}). Zkontroluj prosím ručně.`
+          );
+          setImages((prev) => ({ ...prev, [type]: `${data.url}?${new Date().getTime()}` }));
+        } else {
+          showStatus('success', 'Jídelníček nahrán.');
+          setImages((prev) => ({ ...prev, [type]: `${data.url}?${new Date().getTime()}` }));
+        }
+        loadUploadedWeeks();
+      } else {
+        setImages((prev) => ({ ...prev, [type]: `${data.url}?${new Date().getTime()}` }));
+        showStatus('success', 'Soubor úspěšně nahrán!');
+      }
     } else {
       URL.revokeObjectURL(previewUrl);
       showStatus('error', 'Chyba při nahrávání souboru.');
