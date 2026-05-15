@@ -1,3 +1,5 @@
+import type { WeeklyMenu } from '@/app/types';
+
 export const WEEKS_BACK = 4;
 export const WEEKS_FORWARD = 4;
 
@@ -58,4 +60,19 @@ export function getWeekOptions(now: Date = new Date()): WeekOption[] {
 
 export function getCurrentWeekKey(now: Date = new Date()): string {
   return formatWeekKey(getMonday(now));
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function detectWeekFromMenu(menu: WeeklyMenu): string | null {
+  const mondayCounts = new Map<string, number>();
+  for (const day of menu.days) {
+    if (!day.date || !DATE_RE.test(day.date)) continue;
+    const parsed = parseWeekKey(day.date);
+    if (isNaN(parsed.getTime())) continue;
+    const monday = formatWeekKey(getMonday(parsed));
+    mondayCounts.set(monday, (mondayCounts.get(monday) ?? 0) + 1);
+  }
+  if (mondayCounts.size === 0) return null;
+  return [...mondayCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
