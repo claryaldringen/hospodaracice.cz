@@ -581,7 +581,7 @@ export default function AdminPage() {
       {/* Content */}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         {/* Action posters */}
-        <div className="mb-6 overflow-hidden rounded-2xl bg-zinc-950 p-5 text-white shadow">
+        <div className="mb-6 overflow-hidden rounded-2xl bg-white p-5 shadow">
           <ActionPostersAdmin onStatus={showStatus} />
         </div>
 

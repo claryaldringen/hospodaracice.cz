@@ -42,13 +42,13 @@ function PosterRow({ poster, onDelete }: { poster: ActionPoster; onDelete: (id: 
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 rounded p-2"
+      className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded p-2"
     >
       <button
         type="button"
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none px-2 text-zinc-400 hover:text-white"
+        className="cursor-grab touch-none px-2 text-gray-400 hover:text-gray-700"
         aria-label="Přesunout"
       >
         ≡
@@ -60,13 +60,13 @@ function PosterRow({ poster, onDelete }: { poster: ActionPoster; onDelete: (id: 
         className="h-24 w-auto object-contain"
         loading="lazy"
       />
-      <div className="flex-1 text-sm text-zinc-300">
+      <div className="flex-1 text-sm text-gray-700">
         #{poster.position} — {poster.altText}
       </div>
       <button
         type="button"
         onClick={() => onDelete(poster.id)}
-        className="px-3 py-1 text-red-400 hover:text-red-200"
+        className="px-3 py-1 text-red-500 hover:text-red-700"
         aria-label="Smazat plakát"
       >
         ✕
@@ -164,7 +164,7 @@ export default function ActionPostersAdmin({ onStatus }: Props) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-sm disabled:opacity-50"
+          className="px-3 py-1 bg-gray-900 hover:bg-gray-800 text-white rounded text-sm disabled:opacity-50"
         >
           {uploading ? 'Nahrávám…' : '+ Přidat plakát'}
         </button>
@@ -177,7 +177,7 @@ export default function ActionPostersAdmin({ onStatus }: Props) {
         />
       </div>
       {posters.length === 0 ? (
-        <p className="text-zinc-500 text-sm">Žádné plakáty zatím nejsou.</p>
+        <p className="text-gray-500 text-sm">Žádné plakáty zatím nejsou.</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={posters.map((p) => p.id)} strategy={verticalListSortingStrategy}>
