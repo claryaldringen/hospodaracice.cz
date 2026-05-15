@@ -119,10 +119,7 @@ export default function ActionPostersAdmin({ onStatus }: Props) {
         setPosters((prev) => [...prev, data]);
         uploaded++;
       }
-      onStatus(
-        'success',
-        files.length === 1 ? 'Plakát nahrán.' : `Nahráno ${uploaded} plakátů.`
-      );
+      onStatus('success', files.length === 1 ? 'Plakát nahrán.' : `Nahráno ${uploaded} plakátů.`);
     } catch {
       onStatus(
         'error',
