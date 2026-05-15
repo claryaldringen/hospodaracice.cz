@@ -13,7 +13,6 @@ import { processImage } from '@/app/admin/processImage';
 const UPLOADS_URL = process.env.NEXT_PUBLIC_UPLOADS_URL;
 
 const IMAGE_LABELS: Record<ImageType, string> = {
-  action: 'Akce',
   weekly: 'Týdenní nabídka',
   permanent1: 'Stálá nabídka 1',
   permanent2: 'Stálá nabídka 2',
@@ -51,7 +50,6 @@ export default function AdminPage() {
     Object.fromEntries(IMAGE_TYPES.map((type) => [type, null])) as Record<ImageType, string | null>
   );
   const [existingImages, setExistingImages] = useState<Record<ImageType, boolean>>({
-    action: false,
     weekly: false,
     permanent1: false,
     permanent2: false,
@@ -59,7 +57,6 @@ export default function AdminPage() {
     permanent4: false,
   });
   const fileInputRefs = useRef<Record<ImageType, HTMLInputElement | null>>({
-    action: null,
     weekly: null,
     permanent1: null,
     permanent2: null,

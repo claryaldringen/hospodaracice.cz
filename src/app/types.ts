@@ -1,5 +1,4 @@
 export const IMAGE_TYPES = [
-  'action',
   'weekly',
   'permanent1',
   'permanent2',

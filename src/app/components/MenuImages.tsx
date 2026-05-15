@@ -1,5 +1,6 @@
-import type { ImageOcrData, WeeklyTabData } from '@/app/types';
+import type { ActionPoster, ImageOcrData, WeeklyTabData } from '@/app/types';
 import WeeklyMenuTabs from '@/app/components/WeeklyMenuTabs';
+import ActionPosters from '@/app/components/ActionPosters';
 
 interface MenuImagesProps {
   availableImages: Record<string, string>;
@@ -13,6 +14,7 @@ interface MenuImagesProps {
     current: WeeklyTabData | null;
     next: WeeklyTabData | null;
   };
+  actionPosters: ActionPoster[];
 }
 
 export default function MenuImages({
@@ -20,23 +22,11 @@ export default function MenuImages({
   visibleSections,
   ocrData,
   weeklyData,
+  actionPosters,
 }: MenuImagesProps) {
   return (
     <>
-      {visibleSections.action && availableImages.action && (
-        <section id="action">
-          <div className="relative w-full h-screen mt-4 mb-4 flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={availableImages.action}
-              alt={ocrData.action?.altText || 'Akce Letáček'}
-              className="max-h-full max-w-full object-contain shadow-lg"
-              loading="eager"
-            />
-          </div>
-          {ocrData.action?.fullText && <div className="sr-only">{ocrData.action.fullText}</div>}
-        </section>
-      )}
+      {visibleSections.action && <ActionPosters posters={actionPosters} />}
 
       {visibleSections.weekly && (
         <section id="weekly">
