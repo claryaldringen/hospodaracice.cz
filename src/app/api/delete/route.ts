@@ -23,6 +23,7 @@ export async function POST(req: Request) {
     await query('DELETE FROM weekly_menu WHERE week_start = $1', [week]);
   } else {
     await deleteFile('menu', `${type}.webp`);
+    await deleteFile('menu', `${type}.jpg`);
     await query('DELETE FROM menu_images WHERE type = $1', [type]);
   }
 
