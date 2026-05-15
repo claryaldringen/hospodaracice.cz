@@ -76,3 +76,10 @@ export interface GalleryItem {
   url: string;
   createdAt: string;
 }
+
+export interface ActionPoster {
+  id: number;
+  filename: string;
+  position: number;
+  altText: string;
+}
