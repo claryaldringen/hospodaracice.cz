@@ -33,32 +33,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'No file' }, { status: 400 });
   }
 
-  const next = await queryOne<{ next_position: number }>(
-    'SELECT COALESCE(MAX(position), 0) + 1 AS next_position FROM action_posters'
-  );
-  const position = next?.next_position ?? 1;
-
-  const inserted = await queryOne<{ id: number }>(
-    `INSERT INTO action_posters (filename, position) VALUES ('', $1) RETURNING id`,
-    [position]
+  const inserted = await queryOne<{ id: number; position: number }>(
+    `INSERT INTO action_posters (filename, position)
+     SELECT '', COALESCE(MAX(position), 0) + 1 FROM action_posters
+     RETURNING id, position`
   );
   if (!inserted) {
     return NextResponse.json({ message: 'Insert failed' }, { status: 500 });
   }
+  const { id, position } = inserted;
 
-  const filename = `action-${inserted.id}.webp`;
+  const filename = `action-${id}.webp`;
   const buffer = Buffer.from(await file.arrayBuffer());
   try {
     await saveFile('menu', filename, buffer);
   } catch {
-    await query('DELETE FROM action_posters WHERE id = $1', [inserted.id]);
+    await query('DELETE FROM action_posters WHERE id = $1', [id]);
     return NextResponse.json({ message: 'Failed to save file' }, { status: 500 });
   }
 
-  await query('UPDATE action_posters SET filename = $1 WHERE id = $2', [filename, inserted.id]);
+  await query('UPDATE action_posters SET filename = $1 WHERE id = $2', [filename, id]);
 
   return NextResponse.json({
-    id: inserted.id,
+    id,
     filename,
     position,
     altText: 'Plakát akce',
