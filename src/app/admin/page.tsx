@@ -9,6 +9,7 @@ import {
 } from '@/app/types';
 import { getWeekOptions, getCurrentWeekKey } from '@/app/lib/week';
 import { processImage } from '@/app/admin/processImage';
+import ActionPostersAdmin from '@/app/admin/ActionPostersAdmin';
 
 const UPLOADS_URL = process.env.NEXT_PUBLIC_UPLOADS_URL;
 
@@ -579,6 +580,11 @@ export default function AdminPage() {
 
       {/* Content */}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        {/* Action posters */}
+        <div className="mb-6 overflow-hidden rounded-2xl bg-zinc-950 p-5 text-white shadow">
+          <ActionPostersAdmin onStatus={showStatus} />
+        </div>
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {IMAGE_TYPES.map((type) => (
             <div key={type} className="overflow-hidden rounded-2xl bg-white shadow">
