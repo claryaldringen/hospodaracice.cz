@@ -3,10 +3,7 @@ import { isAuthenticated } from '@/app/lib/auth';
 import { deleteFile } from '@/app/lib/storage';
 import { query, queryOne } from '@/app/lib/db';
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }

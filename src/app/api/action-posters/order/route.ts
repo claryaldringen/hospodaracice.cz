@@ -26,14 +26,9 @@ export async function PATCH(req: Request) {
   const client = await getPool().connect();
   try {
     await client.query('BEGIN');
-    const existing = await client.query<{ id: number }>(
-      'SELECT id FROM action_posters FOR UPDATE'
-    );
+    const existing = await client.query<{ id: number }>('SELECT id FROM action_posters FOR UPDATE');
     const existingIds = new Set(existing.rows.map((r) => r.id));
-    if (
-      existingIds.size !== idSet.size ||
-      [...idSet].some((id) => !existingIds.has(id))
-    ) {
+    if (existingIds.size !== idSet.size || [...idSet].some((id) => !existingIds.has(id))) {
       await client.query('ROLLBACK');
       return NextResponse.json(
         { message: 'ids must match exactly the existing posters' },
@@ -42,10 +37,7 @@ export async function PATCH(req: Request) {
     }
 
     for (let i = 0; i < ids.length; i++) {
-      await client.query('UPDATE action_posters SET position = $1 WHERE id = $2', [
-        i + 1,
-        ids[i],
-      ]);
+      await client.query('UPDATE action_posters SET position = $1 WHERE id = $2', [i + 1, ids[i]]);
     }
     await client.query('COMMIT');
   } catch (err) {

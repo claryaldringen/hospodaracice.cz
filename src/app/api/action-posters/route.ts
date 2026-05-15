@@ -55,10 +55,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Failed to save file' }, { status: 500 });
   }
 
-  await query(
-    'UPDATE action_posters SET filename = $1 WHERE id = $2',
-    [filename, inserted.id]
-  );
+  await query('UPDATE action_posters SET filename = $1 WHERE id = $2', [filename, inserted.id]);
 
   return NextResponse.json({
     id: inserted.id,
