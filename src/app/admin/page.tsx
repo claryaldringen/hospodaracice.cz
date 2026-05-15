@@ -8,47 +8,12 @@ import {
   type Order,
 } from '@/app/types';
 import { getWeekOptions, getCurrentWeekKey } from '@/app/lib/week';
+import { processImage } from '@/app/admin/processImage';
+import ActionPostersAdmin from '@/app/admin/ActionPostersAdmin';
 
 const UPLOADS_URL = process.env.NEXT_PUBLIC_UPLOADS_URL;
 
-const MAX_WIDTH = 1920;
-const WEBP_QUALITY = 0.85;
-
-function processImage(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let { width, height } = img;
-      if (width > MAX_WIDTH) {
-        height = Math.round(height * (MAX_WIDTH / width));
-        width = MAX_WIDTH;
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Canvas toBlob failed'));
-        },
-        'image/webp',
-        WEBP_QUALITY
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
-    };
-    img.src = url;
-  });
-}
-
 const IMAGE_LABELS: Record<ImageType, string> = {
-  action: 'Akce',
   weekly: 'Týdenní nabídka',
   permanent1: 'Stálá nabídka 1',
   permanent2: 'Stálá nabídka 2',
@@ -86,7 +51,6 @@ export default function AdminPage() {
     Object.fromEntries(IMAGE_TYPES.map((type) => [type, null])) as Record<ImageType, string | null>
   );
   const [existingImages, setExistingImages] = useState<Record<ImageType, boolean>>({
-    action: false,
     weekly: false,
     permanent1: false,
     permanent2: false,
@@ -94,7 +58,6 @@ export default function AdminPage() {
     permanent4: false,
   });
   const fileInputRefs = useRef<Record<ImageType, HTMLInputElement | null>>({
-    action: null,
     weekly: null,
     permanent1: null,
     permanent2: null,
@@ -617,6 +580,11 @@ export default function AdminPage() {
 
       {/* Content */}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        {/* Action posters */}
+        <div className="mb-6 overflow-hidden rounded-2xl bg-white p-5 shadow">
+          <ActionPostersAdmin onStatus={showStatus} />
+        </div>
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {IMAGE_TYPES.map((type) => (
             <div key={type} className="overflow-hidden rounded-2xl bg-white shadow">

@@ -2,7 +2,13 @@ import Footer from '@/app/components/Footer';
 import Navigation from '@/app/components/Navigation';
 import MenuImages from '@/app/components/MenuImages';
 import Gallery from '@/app/components/Gallery';
-import { IMAGE_TYPES, type ImageOcrData, type WeeklyMenu, type WeeklyTabData } from '@/app/types';
+import {
+  IMAGE_TYPES,
+  type ActionPoster,
+  type ImageOcrData,
+  type WeeklyMenu,
+  type WeeklyTabData,
+} from '@/app/types';
 import { query, queryOne } from '@/app/lib/db';
 import { fileExists, getPublicUrl } from '@/app/lib/storage';
 import { formatWeekKey, formatWeekRange, getMonday, parseWeekKey } from '@/app/lib/week';
@@ -20,6 +26,21 @@ async function fetchOcrData(type: string): Promise<ImageOcrData | undefined> {
     [type]
   );
   return row ? { fullText: row.full_text, altText: row.alt_text } : undefined;
+}
+
+async function fetchActionPosters(): Promise<ActionPoster[]> {
+  const rows = await query<{
+    id: number;
+    filename: string;
+    position: number;
+    alt_text: string;
+  }>('SELECT id, filename, position, alt_text FROM action_posters ORDER BY position ASC');
+  return rows.map((r) => ({
+    id: r.id,
+    filename: r.filename,
+    position: r.position,
+    altText: r.alt_text,
+  }));
 }
 
 async function fetchWeeklyTabsData(
@@ -85,7 +106,7 @@ export default async function HomePage() {
 
   const nonWeeklyTypes = IMAGE_TYPES.filter((t) => t !== 'weekly');
 
-  const [weeklyData, resolved] = await Promise.all([
+  const [weeklyData, resolved, actionPosters] = await Promise.all([
     fetchWeeklyTabsData(currentWeekKey, nextWeekKey),
     Promise.all(
       nonWeeklyTypes.map(async (type) => {
@@ -93,6 +114,7 @@ export default async function HomePage() {
         return [type, imageUrl, ocrData] as const;
       })
     ),
+    fetchActionPosters(),
   ]);
 
   const availableImages: Record<string, string> = {};
@@ -106,7 +128,7 @@ export default async function HomePage() {
   }
 
   const visibleSections = {
-    action: !!availability.action,
+    action: actionPosters.length > 0,
     weekly: !!(weeklyData.current || weeklyData.next),
     permanent: !!availability.permanent1,
   };
@@ -120,6 +142,7 @@ export default async function HomePage() {
           visibleSections={visibleSections}
           ocrData={ocrDataMap}
           weeklyData={weeklyData}
+          actionPosters={actionPosters}
         />
         <Gallery />
         <Footer openingHours={openingHours} />

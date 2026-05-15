@@ -1,5 +1,4 @@
 export const IMAGE_TYPES = [
-  'action',
   'weekly',
   'permanent1',
   'permanent2',
@@ -75,4 +74,11 @@ export interface GalleryItem {
   type: 'image' | 'video';
   url: string;
   createdAt: string;
+}
+
+export interface ActionPoster {
+  id: number;
+  filename: string;
+  position: number;
+  altText: string;
 }
