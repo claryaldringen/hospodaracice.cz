@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { isAuthenticated } from '@/app/lib/auth';
 import { saveFile, getPublicUrl } from '@/app/lib/storage';
 import { query } from '@/app/lib/db';
-import { isValidWeekKey } from '@/app/lib/week';
+import { isValidWeekKey, detectWeekFromMenu } from '@/app/lib/week';
 import type { WeeklyMenu } from '@/app/types';
 
 function createAltText(fullText: string): string {
@@ -42,7 +42,7 @@ async function extractMenu(imageBuffer: Buffer): Promise<WeeklyMenu | null> {
               type: 'text',
               text: `Analyzuj tento obrázek týdenní nabídky jídel. Vrať POUZE validní JSON v tomto formátu, nic dalšího:
 {"days":[{"day":"Pondělí","date":"YYYY-MM-DD","meals":[{"name":"Název jídla","price":145}]}]}
-Pokud datum není na obrázku, odhadni ho podle aktuálního týdne. Cenu uveď jako číslo bez Kč.`,
+Pokud datum NENÍ na obrázku, nech pole "date" prázdný řetězec "". Nikdy nevymýšlej datumy, které na obrázku nejsou. Cenu uveď jako číslo bez Kč.`,
             },
           ],
         },
@@ -90,16 +90,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const filename = type === 'weekly' ? `weekly-${week}.webp` : `${type}.webp`;
   const imageBuffer = Buffer.from(await file.arrayBuffer());
 
-  await saveFile('menu', filename, imageBuffer);
-
-  const url = getPublicUrl('menu', filename);
-  let menuSaved = false;
-
-  if (type === 'weekly' && week) {
+  if (type === 'weekly') {
+    const adminWeek = week!;
     const menu = await extractMenu(imageBuffer);
+    const detectedWeek = menu ? detectWeekFromMenu(menu) : null;
+    const effectiveWeek = detectedWeek ?? adminWeek;
+
+    const filename = `weekly-${effectiveWeek}.webp`;
+    await saveFile('menu', filename, imageBuffer);
+    const url = getPublicUrl('menu', filename);
+
+    let menuSaved = false;
     if (menu) {
       const fullText = menuToText(menu);
       const altText = createAltText(fullText);
@@ -107,7 +110,7 @@ export async function POST(req: NextRequest) {
         `INSERT INTO weekly_menu (week_start, data, full_text, alt_text)
          VALUES ($1, $2, $3, $4)
          ON CONFLICT (week_start) DO UPDATE SET data = $2, full_text = $3, alt_text = $4`,
-        [week, JSON.stringify(menu), fullText, altText]
+        [effectiveWeek, JSON.stringify(menu), fullText, altText]
       );
       menuSaved = true;
     } else {
@@ -115,10 +118,22 @@ export async function POST(req: NextRequest) {
         `INSERT INTO weekly_menu (week_start, data)
          VALUES ($1, '{"days":[]}'::jsonb)
          ON CONFLICT (week_start) DO NOTHING`,
-        [week]
+        [effectiveWeek]
       );
     }
+
+    return NextResponse.json({
+      url,
+      menuSaved,
+      adminWeek,
+      detectedWeek,
+      effectiveWeek,
+      rerouted: detectedWeek !== null && detectedWeek !== adminWeek,
+    });
   }
 
-  return NextResponse.json({ url, menuSaved });
+  const filename = `${type}.webp`;
+  await saveFile('menu', filename, imageBuffer);
+  const url = getPublicUrl('menu', filename);
+  return NextResponse.json({ url, menuSaved: false });
 }
