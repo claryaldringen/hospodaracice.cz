@@ -6,7 +6,8 @@ function getResend() {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-const FROM = 'Hospoda Na Palouku <noreply@resend.dev>';
+const FROM = 'Hospoda Na Palouku <noreply@hospodaracice.cz>';
+const REPLY_TO = 'hospoda@obec-racice.cz';
 
 export async function sendConfirmationRequest(reservation: Reservation) {
   const confirmUrl = `${BASE_URL}/api/reservations/confirm?token=${reservation.token}`;
@@ -15,6 +16,7 @@ export async function sendConfirmationRequest(reservation: Reservation) {
   await getResend().emails.send({
     from: FROM,
     to: reservation.email,
+    replyTo: REPLY_TO,
     subject: 'Potvrďte svou rezervaci — Hospoda Na Palouku',
     html: `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
@@ -41,6 +43,7 @@ export async function sendConfirmedEmail(reservation: Reservation) {
   await getResend().emails.send({
     from: FROM,
     to: reservation.email,
+    replyTo: REPLY_TO,
     subject: 'Rezervace potvrzena — Hospoda Na Palouku',
     html: `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
@@ -55,6 +58,31 @@ export async function sendConfirmedEmail(reservation: Reservation) {
         </table>
         <p>Těšíme se na vás!</p>
         <p style="margin-top: 24px; font-size: 14px; color: #666;">Pokud potřebujete rezervaci zrušit, klikněte <a href="${cancelUrl}">zde</a>.</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendReservationNotification(reservation: Reservation) {
+  const notifyTo = process.env.ORDER_EMAIL;
+  if (!notifyTo) return;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: notifyTo,
+    replyTo: reservation.email,
+    subject: `Nová rezervace — ${reservation.name}, ${reservation.date} ${reservation.timeFrom}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+        <h2>Potvrzená rezervace</h2>
+        <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Jméno</td><td style="padding: 6px 12px;">${reservation.name}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Email</td><td style="padding: 6px 12px;">${reservation.email}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Datum</td><td style="padding: 6px 12px;">${reservation.date}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Čas</td><td style="padding: 6px 12px;">${reservation.timeFrom} – ${reservation.timeTo}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Počet míst</td><td style="padding: 6px 12px;">${reservation.seats}</td></tr>
+          ${reservation.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${reservation.note}</td></tr>` : ''}
+        </table>
       </div>
     `,
   });

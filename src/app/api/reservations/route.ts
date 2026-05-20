@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
 
   try {
     await sendConfirmationRequest(reservation);
-  } catch {
-    // Email failed but reservation is saved
+  } catch (err) {
+    console.error('sendConfirmationRequest failed:', err);
   }
 
   return NextResponse.json({ ok: true });
