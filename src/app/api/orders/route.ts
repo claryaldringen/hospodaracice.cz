@@ -67,8 +67,9 @@ export async function POST(req: NextRequest) {
 
   try {
     await getResend().emails.send({
-      from: 'Hospoda Na Palouku <noreply@resend.dev>',
+      from: 'Hospoda Na Palouku <noreply@hospodaracice.cz>',
       to: orderEmail,
+      replyTo: 'hospoda@obec-racice.cz',
       subject: `Nová objednávka — ${name}, ${village}, ${day} ${date}`,
       html: `
         <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
@@ -96,8 +97,8 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     });
-  } catch {
-    // Email failed but order is saved
+  } catch (err) {
+    console.error('Order email send failed:', err);
   }
 
   return NextResponse.json({ ok: true });

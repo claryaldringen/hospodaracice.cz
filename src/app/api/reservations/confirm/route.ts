@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findByToken, updateStatus } from '@/app/lib/reservations';
-import { sendConfirmedEmail } from '@/app/lib/email';
+import { sendConfirmedEmail, sendReservationNotification } from '@/app/lib/email';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -28,8 +28,14 @@ export async function GET(req: NextRequest) {
 
   try {
     await sendConfirmedEmail(reservation);
-  } catch {
-    // Email failed but reservation is confirmed
+  } catch (err) {
+    console.error('sendConfirmedEmail failed:', err);
+  }
+
+  try {
+    await sendReservationNotification(reservation);
+  } catch (err) {
+    console.error('sendReservationNotification failed:', err);
   }
 
   return NextResponse.redirect(`${BASE_URL}/rezervace?confirmed=1`);
