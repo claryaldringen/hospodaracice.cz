@@ -338,6 +338,23 @@ export default function AdminPage() {
     }
   };
 
+  const handleOrderStatus = async (id: string, status: 'confirmed' | 'cancelled') => {
+    const res = await fetch('/api/orders/admin-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    });
+    if (res.ok) {
+      showStatus(
+        'success',
+        status === 'confirmed' ? 'Objednávka potvrzena.' : 'Objednávka zrušena.'
+      );
+      loadOrders(orderDate);
+    } else {
+      showStatus('error', 'Chyba při změně stavu objednávky.');
+    }
+  };
+
   const handleSaveOpeningHours = async () => {
     try {
       const res = await fetch('/api/opening-hours', {
@@ -432,19 +449,22 @@ export default function AdminPage() {
   };
 
   // Summary view: aggregate items across all orders
-  const orderSummary = orders.reduce<
-    Record<string, { name: string; quantity: number; totalPrice: number }>
-  >((acc, order) => {
-    for (const item of order.items) {
-      const key = item.name;
-      if (!acc[key]) {
-        acc[key] = { name: item.name, quantity: 0, totalPrice: 0 };
-      }
-      acc[key].quantity += item.quantity;
-      acc[key].totalPrice += item.price * item.quantity;
-    }
-    return acc;
-  }, {});
+  const orderSummary = orders
+    .filter((o) => o.status !== 'cancelled')
+    .reduce<Record<string, { name: string; quantity: number; totalPrice: number }>>(
+      (acc, order) => {
+        for (const item of order.items) {
+          const key = item.name;
+          if (!acc[key]) {
+            acc[key] = { name: item.name, quantity: 0, totalPrice: 0 };
+          }
+          acc[key].quantity += item.quantity;
+          acc[key].totalPrice += item.price * item.quantity;
+        }
+        return acc;
+      },
+      {}
+    );
   const summaryRows = Object.values(orderSummary);
   const summaryTotal = summaryRows.reduce((sum, r) => sum + r.totalPrice, 0);
 
@@ -974,10 +994,31 @@ export default function AdminPage() {
                         {villageOrders.map((order) => (
                           <div
                             key={order.id}
-                            className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm"
+                            className={`rounded-lg border p-3 text-sm ${
+                              order.status === 'cancelled'
+                                ? 'border-gray-200 bg-gray-50 opacity-60'
+                                : 'border-gray-200 bg-gray-50'
+                            }`}
                           >
-                            <div className="mb-1 font-medium text-gray-900">
-                              {order.name} — {order.phone}
+                            <div className="mb-1 flex items-center gap-2">
+                              <span className="font-medium text-gray-900">
+                                {order.name} — {order.phone}
+                              </span>
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                  order.status === 'confirmed'
+                                    ? 'bg-green-200 text-green-800'
+                                    : order.status === 'cancelled'
+                                      ? 'bg-gray-200 text-gray-600'
+                                      : 'bg-yellow-200 text-yellow-800'
+                                }`}
+                              >
+                                {order.status === 'confirmed'
+                                  ? 'Potvrzená'
+                                  : order.status === 'cancelled'
+                                    ? 'Zrušená'
+                                    : 'Nová'}
+                              </span>
                             </div>
                             <div className="mb-2 text-gray-600">{order.address}</div>
                             <table className="w-full">
@@ -998,6 +1039,22 @@ export default function AdminPage() {
                             {order.note && (
                               <div className="mt-2 text-xs text-gray-500">
                                 Poznámka: {order.note}
+                              </div>
+                            )}
+                            {order.status === 'new' && (
+                              <div className="mt-3 flex gap-2">
+                                <button
+                                  onClick={() => handleOrderStatus(order.id, 'confirmed')}
+                                  className="rounded-lg border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-50"
+                                >
+                                  Potvrdit
+                                </button>
+                                <button
+                                  onClick={() => handleOrderStatus(order.id, 'cancelled')}
+                                  className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                >
+                                  Zrušit
+                                </button>
                               </div>
                             )}
                           </div>
