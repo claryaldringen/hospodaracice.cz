@@ -9,6 +9,15 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const FROM = 'Hospoda Na Palouku <noreply@hospodaracice.cz>';
 const REPLY_TO = 'hospoda@obec-racice.cz';
 
+// Dočasná skrytá kopie notifikací hospody do konce roku 2026 (čas ČR).
+// Po 1. 1. 2027 se BCC samo přestane přidávat — konstanty i helper lze pak smazat.
+const TEMP_BCC = 'clary.aldringen@seznam.cz';
+const TEMP_BCC_UNTIL = new Date('2027-01-01T00:00:00+01:00');
+
+function notificationBcc(): string[] {
+  return new Date() < TEMP_BCC_UNTIL ? [TEMP_BCC] : [];
+}
+
 export async function sendConfirmationRequest(reservation: Reservation) {
   const confirmUrl = `${BASE_URL}/api/reservations/confirm?token=${reservation.token}`;
   const cancelUrl = `${BASE_URL}/api/reservations/cancel?token=${reservation.token}`;
@@ -67,9 +76,12 @@ export async function sendReservationNotification(reservation: Reservation) {
   const notifyTo = process.env.ORDER_EMAIL;
   if (!notifyTo) return;
 
+  const bcc = notificationBcc();
+
   await getResend().emails.send({
     from: FROM,
     to: notifyTo,
+    ...(bcc.length ? { bcc } : {}),
     replyTo: reservation.email,
     subject: `Nová rezervace — ${reservation.name}, ${reservation.date} ${reservation.timeFrom}`,
     html: `
@@ -110,10 +122,12 @@ export async function sendOrderNotification(order: Order) {
   if (!notifyTo || !process.env.RESEND_API_KEY) return;
 
   const confirmUrl = `${BASE_URL}/api/orders/confirm?token=${order.token}`;
+  const bcc = notificationBcc();
 
   await getResend().emails.send({
     from: FROM,
     to: notifyTo,
+    ...(bcc.length ? { bcc } : {}),
     replyTo: order.email || REPLY_TO,
     subject: `Nová objednávka — ${order.name}, ${order.village}, ${order.day} ${order.date}`,
     html: `
