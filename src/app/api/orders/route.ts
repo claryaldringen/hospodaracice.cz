@@ -16,9 +16,9 @@ async function loadVillages(): Promise<string[]> {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, phone, address, village, note, day, date, items } = body;
+  const { name, email, phone, address, village, note, day, date, items } = body;
 
-  if (!name || !phone || !address || !village || !day || !date) {
+  if (!name || !email || !phone || !address || !village || !day || !date) {
     return NextResponse.json({ error: 'Vyplňte všechna povinná pole.' }, { status: 400 });
   }
 
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   const order: Order = {
     id: randomUUID(),
     name,
+    email,
     phone,
     address,
     village,
@@ -41,6 +42,8 @@ export async function POST(req: NextRequest) {
     day,
     date,
     items: items as OrderItem[],
+    status: 'new',
+    token: randomUUID(),
     createdAt: new Date().toISOString(),
   };
 

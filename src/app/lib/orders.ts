@@ -1,9 +1,10 @@
-import { query } from './db';
+import { query, queryOne } from './db';
 import type { Order } from '@/app/types';
 
 interface OrderRow {
   id: string;
   name: string;
+  email: string | null;
   phone: string;
   address: string;
   village: string;
@@ -11,6 +12,8 @@ interface OrderRow {
   day: string;
   date: string;
   items: unknown;
+  status: string;
+  token: string | null;
   created_at: Date;
 }
 
@@ -18,6 +21,7 @@ function mapRow(row: OrderRow): Order {
   return {
     id: row.id,
     name: row.name,
+    email: row.email ?? '',
     phone: row.phone,
     address: row.address,
     village: row.village,
@@ -25,17 +29,20 @@ function mapRow(row: OrderRow): Order {
     day: row.day,
     date: row.date,
     items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items,
+    status: row.status as Order['status'],
+    token: row.token ?? '',
     createdAt: row.created_at.toISOString(),
   };
 }
 
 export async function createOrder(order: Order): Promise<void> {
   await query(
-    `INSERT INTO orders (id, name, phone, address, village, note, day, date, items, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    `INSERT INTO orders (id, name, email, phone, address, village, note, day, date, items, status, token, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
     [
       order.id,
       order.name,
+      order.email,
       order.phone,
       order.address,
       order.village,
@@ -43,6 +50,8 @@ export async function createOrder(order: Order): Promise<void> {
       order.day,
       order.date,
       JSON.stringify(order.items),
+      order.status,
+      order.token,
       order.createdAt,
     ]
   );
@@ -53,4 +62,18 @@ export async function getOrdersByDate(date: string): Promise<Order[]> {
     date,
   ]);
   return rows.map(mapRow);
+}
+
+export async function findOrderById(id: string): Promise<Order | null> {
+  const row = await queryOne<OrderRow>('SELECT * FROM orders WHERE id = $1', [id]);
+  return row ? mapRow(row) : null;
+}
+
+export async function findOrderByToken(token: string): Promise<Order | null> {
+  const row = await queryOne<OrderRow>('SELECT * FROM orders WHERE token = $1', [token]);
+  return row ? mapRow(row) : null;
+}
+
+export async function updateOrderStatus(id: string, status: Order['status']): Promise<void> {
+  await query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
 }

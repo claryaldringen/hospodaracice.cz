@@ -59,6 +59,7 @@ export interface OrderItem {
 export interface Order {
   id: string;
   name: string;
+  email: string;
   phone: string;
   address: string;
   village: string;
@@ -66,6 +67,8 @@ export interface Order {
   day: string;
   date: string;
   items: OrderItem[];
+  status: 'new' | 'confirmed' | 'cancelled';
+  token: string;
   createdAt: string;
 }
 
