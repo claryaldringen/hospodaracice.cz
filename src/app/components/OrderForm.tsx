@@ -13,6 +13,7 @@ export default function OrderForm({ days }: OrderFormProps) {
   const [selectedDay, setSelectedDay] = useState<MenuDay | null>(null);
 
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [village, setVillage] = useState('');
@@ -88,6 +89,10 @@ export default function OrderForm({ days }: OrderFormProps) {
       setResult({ type: 'error', text: 'Zadejte platné telefonní číslo.' });
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setResult({ type: 'error', text: 'Zadejte platný e-mail.' });
+      return;
+    }
     setSubmitting(true);
     setResult(null);
 
@@ -97,6 +102,7 @@ export default function OrderForm({ days }: OrderFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
+          email,
           phone,
           address,
           village,
@@ -111,6 +117,7 @@ export default function OrderForm({ days }: OrderFormProps) {
         setResult({ type: 'success', text: 'Objednávka odeslána!' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setName('');
+        setEmail('');
         setPhone('');
         setAddress('');
         setNote('');
@@ -216,6 +223,14 @@ export default function OrderForm({ days }: OrderFormProps) {
               placeholder="Jméno"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
+            />
+            <input
+              type="email"
+              required
+              placeholder="E-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
             />
             <input
