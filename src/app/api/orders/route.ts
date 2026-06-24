@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { randomUUID } from 'crypto';
 import { createOrder } from '@/app/lib/orders';
+import { sendOrderNotification } from '@/app/lib/email';
 import { query } from '@/app/lib/db';
 import type { OrderItem, Order } from '@/app/types';
-
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
 
 async function loadVillages(): Promise<string[]> {
   const rows = await query<{ name: string }>('SELECT name FROM delivery_villages ORDER BY name');
@@ -49,59 +45,10 @@ export async function POST(req: NextRequest) {
 
   await createOrder(order);
 
-  const totalPrice = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const orderEmail = process.env.ORDER_EMAIL;
-  const resendKey = process.env.RESEND_API_KEY;
-  if (!orderEmail || !resendKey) {
-    return NextResponse.json({ ok: true });
-  }
-
-  const itemsHtml = order.items
-    .map(
-      (item) =>
-        `<tr>
-          <td style="padding: 6px 12px;">${item.name}</td>
-          <td style="padding: 6px 12px; text-align: center;">${item.quantity}×</td>
-          <td style="padding: 6px 12px; text-align: right;">${item.price * item.quantity} Kč</td>
-        </tr>`
-    )
-    .join('');
-
   try {
-    await getResend().emails.send({
-      from: 'Hospoda Na Palouku <noreply@hospodaracice.cz>',
-      to: orderEmail,
-      replyTo: 'hospoda@obec-racice.cz',
-      subject: `Nová objednávka — ${name}, ${village}, ${day} ${date}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-          <h2>Nová objednávka</h2>
-          <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
-            <tr><td style="padding: 6px 12px; font-weight: bold;">Jméno</td><td style="padding: 6px 12px;">${name}</td></tr>
-            <tr><td style="padding: 6px 12px; font-weight: bold;">Telefon</td><td style="padding: 6px 12px;">${phone}</td></tr>
-            <tr><td style="padding: 6px 12px; font-weight: bold;">Adresa</td><td style="padding: 6px 12px;">${address}, ${village}</td></tr>
-            <tr><td style="padding: 6px 12px; font-weight: bold;">Den</td><td style="padding: 6px 12px;">${day} ${date}</td></tr>
-            ${note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${note}</td></tr>` : ''}
-          </table>
-          <h3>Objednávka</h3>
-          <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
-            <tr style="border-bottom: 1px solid #ddd;">
-              <th style="padding: 6px 12px; text-align: left;">Jídlo</th>
-              <th style="padding: 6px 12px; text-align: center;">Ks</th>
-              <th style="padding: 6px 12px; text-align: right;">Cena</th>
-            </tr>
-            ${itemsHtml}
-            <tr style="border-top: 2px solid #333;">
-              <td style="padding: 6px 12px; font-weight: bold;" colspan="2">Celkem</td>
-              <td style="padding: 6px 12px; text-align: right; font-weight: bold;">${totalPrice} Kč</td>
-            </tr>
-          </table>
-        </div>
-      `,
-    });
+    await sendOrderNotification(order);
   } catch (err) {
-    console.error('Order email send failed:', err);
+    console.error('Order notification email failed:', err);
   }
 
   return NextResponse.json({ ok: true });
