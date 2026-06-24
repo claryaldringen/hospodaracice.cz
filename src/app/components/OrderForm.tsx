@@ -7,6 +7,10 @@ interface OrderFormProps {
   days: MenuDay[];
 }
 
+const inputClass =
+  'w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none';
+const labelClass = 'mb-1 block text-sm font-medium text-white/80';
+
 export default function OrderForm({ days }: OrderFormProps) {
   const [villages, setVillages] = useState<string[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -241,57 +245,93 @@ export default function OrderForm({ days }: OrderFormProps) {
 
           {/* Contact form */}
           <div className="space-y-3">
-            <input
-              type="text"
-              required
-              placeholder="Jméno"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
-            />
-            <input
-              type="email"
-              required
-              placeholder="E-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
-            />
-            <input
-              type="tel"
-              required
-              placeholder="Telefon"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
-            />
-            <select
-              required
-              value={village}
-              onChange={(e) => setVillage(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white transition focus:border-white/50 focus:outline-none"
-            >
-              {villages.map((v) => (
-                <option key={v} value={v} className="text-gray-900">
-                  {v}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              required
-              placeholder="Adresa"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
-            />
-            <textarea
-              rows={2}
-              placeholder="Poznámka (volitelná)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 transition focus:border-white/50 focus:outline-none"
-            />
+            <div>
+              <label htmlFor="order-name" className={labelClass}>
+                Jméno <span className="text-red-300">*</span>
+              </label>
+              <input
+                id="order-name"
+                type="text"
+                required
+                placeholder="Jméno a příjmení"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="order-email" className={labelClass}>
+                E-mail <span className="text-red-300">*</span>
+              </label>
+              <input
+                id="order-email"
+                type="email"
+                required
+                placeholder="vas@email.cz"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="order-phone" className={labelClass}>
+                Telefon <span className="text-red-300">*</span>
+              </label>
+              <input
+                id="order-phone"
+                type="tel"
+                required
+                placeholder="+420 …"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="order-village" className={labelClass}>
+                Obec <span className="text-red-300">*</span>
+              </label>
+              <select
+                id="order-village"
+                required
+                value={village}
+                onChange={(e) => setVillage(e.target.value)}
+                className={inputClass}
+              >
+                {villages.map((v) => (
+                  <option key={v} value={v} className="text-gray-900">
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="order-address" className={labelClass}>
+                Adresa <span className="text-red-300">*</span>
+              </label>
+              <input
+                id="order-address"
+                type="text"
+                required
+                placeholder="Ulice a číslo popisné"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="order-note" className={labelClass}>
+                Poznámka
+              </label>
+              <textarea
+                id="order-note"
+                rows={2}
+                placeholder="Volitelná"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className={inputClass}
+              />
+            </div>
           </div>
           <label className="mt-4 flex items-start gap-2 text-sm text-white/70">
             <input
