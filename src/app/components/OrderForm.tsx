@@ -20,6 +20,7 @@ export default function OrderForm({ days }: OrderFormProps) {
   const [note, setNote] = useState('');
   const [gdprConsent, setGdprConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmTime, setConfirmTime] = useState('16:00');
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadVillages = useCallback(async () => {
@@ -36,6 +37,15 @@ export default function OrderForm({ days }: OrderFormProps) {
   useEffect(() => {
     loadVillages();
   }, [loadVillages]);
+
+  useEffect(() => {
+    fetch('/api/order-settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.confirmTime) setConfirmTime(data.confirmTime);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (selectedDay && !days.some((d) => d.date === selectedDay.date)) {
@@ -114,7 +124,10 @@ export default function OrderForm({ days }: OrderFormProps) {
       });
 
       if (res.ok) {
-        setResult({ type: 'success', text: 'Objednávka odeslána!' });
+        setResult({
+          type: 'success',
+          text: `Děkujeme za Vaši objednávku. Objednávku vám potvrdíme na e-mail ${email} nejpozději v ${confirmTime}. Pokud vám potvrzení nepřijde, zavolejte nám prosím na zde uvedené telefonní číslo.`,
+        });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setName('');
         setEmail('');
