@@ -48,8 +48,18 @@ export default function OrderForm({ days }: OrderFormProps) {
   }, []);
 
   useEffect(() => {
-    if (selectedDay && !days.some((d) => d.date === selectedDay.date)) {
-      setSelectedDay(null);
+    if (days.length === 0) {
+      if (selectedDay) {
+        setSelectedDay(null);
+        setQuantities({});
+      }
+      return;
+    }
+    // Když není vybraný platný den (vč. úvodního stavu), předvyber první —
+    // ať je formulář vidět hned, bez nutnosti kliknout na den.
+    const stillValid = selectedDay && days.some((d) => d.date === selectedDay.date);
+    if (!stillValid) {
+      setSelectedDay(days[0]);
       setQuantities({});
     }
   }, [days, selectedDay]);
@@ -136,7 +146,6 @@ export default function OrderForm({ days }: OrderFormProps) {
         setNote('');
         setQuantities({});
         setGdprConsent(false);
-        setSelectedDay(null);
       } else {
         const data = await res.json();
         setResult({ type: 'error', text: data.error || 'Chyba při odesílání objednávky.' });
