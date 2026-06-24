@@ -357,7 +357,7 @@ export default function OrderForm({ days }: OrderFormProps) {
           <button
             type="submit"
             disabled={submitting || orderItems.length === 0 || !gdprConsent}
-            className="mt-4 w-full rounded-lg bg-white py-2.5 text-sm font-medium text-gray-900 shadow transition hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50"
+            className="mt-4 w-full cursor-pointer rounded-lg bg-white py-2.5 text-sm font-medium text-gray-900 shadow transition hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? 'Odesílání…' : `Objednat (${totalPrice} Kč)`}
           </button>
