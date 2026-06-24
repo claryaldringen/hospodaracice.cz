@@ -185,9 +185,9 @@ export default function OrderForm({ days }: OrderFormProps) {
           <button
             key={day.date}
             onClick={() => handleSelectDay(day)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               selectedDay?.date === day.date
-                ? 'bg-white text-gray-900'
+                ? 'bg-white text-gray-900 hover:bg-gray-100'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
@@ -219,7 +219,7 @@ export default function OrderForm({ days }: OrderFormProps) {
                         type="button"
                         onClick={() => handleQuantity(key, -1)}
                         disabled={qty === 0}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white/10 disabled:opacity-30"
+                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
                       >
                         −
                       </button>
@@ -227,7 +227,7 @@ export default function OrderForm({ days }: OrderFormProps) {
                       <button
                         type="button"
                         onClick={() => handleQuantity(key, 1)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white/10"
+                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white/10"
                       >
                         +
                       </button>

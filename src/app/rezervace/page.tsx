@@ -340,7 +340,7 @@ function ReservationContent() {
           <button
             type="submit"
             disabled={submitting || !gdprConsent}
-            className="mt-4 w-full rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white shadow transition hover:bg-gray-800 active:bg-gray-950 disabled:opacity-50"
+            className="mt-4 w-full cursor-pointer rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white shadow transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? 'Odesílání…' : 'Rezervovat'}
           </button>
