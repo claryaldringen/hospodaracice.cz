@@ -74,6 +74,14 @@ export async function findOrderByToken(token: string): Promise<Order | null> {
   return row ? mapRow(row) : null;
 }
 
-export async function updateOrderStatus(id: string, status: Order['status']): Promise<void> {
-  await query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
+// Atomicky změní stav objednávky pouze pokud je dosud 'new'. Vrací true, když
+// k přechodu skutečně došlo (tj. tento požadavek vyhrál). Brání duplicitním
+// e-mailům při race (dvojklik / souběžný admin) i nepovoleným přechodům
+// (cancelled→confirmed apod.).
+export async function setOrderStatusIfNew(id: string, status: Order['status']): Promise<boolean> {
+  const rows = await query<{ id: string }>(
+    `UPDATE orders SET status = $1 WHERE id = $2 AND status = 'new' RETURNING id`,
+    [status, id]
+  );
+  return rows.length > 0;
 }

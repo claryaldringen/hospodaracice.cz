@@ -393,6 +393,10 @@ export default function AdminPage() {
   };
 
   const handleSaveConfirmTime = async () => {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(confirmTime)) {
+      showStatus('error', 'Zadejte platný čas (HH:MM).');
+      return;
+    }
     try {
       const res = await fetch('/api/order-settings', {
         method: 'POST',
@@ -966,8 +970,9 @@ export default function AdminPage() {
             <input
               id="confirm-time"
               type="time"
+              required
               value={confirmTime}
-              onChange={(e) => setConfirmTime(e.target.value)}
+              onChange={(e) => setConfirmTime(e.target.value.slice(0, 5))}
               className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
             <button
@@ -1035,89 +1040,94 @@ export default function AdminPage() {
               <div className="space-y-5">
                 {Object.entries(ordersByVillage)
                   .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([villageName, villageOrders]) => (
-                    <div key={villageName}>
-                      <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                        {villageName} ({villageOrders.length}{' '}
-                        {villageOrders.length === 1
-                          ? 'objednávka'
-                          : villageOrders.length < 5
-                            ? 'objednávky'
-                            : 'objednávek'}
-                        )
-                      </h3>
-                      <div className="space-y-3">
-                        {villageOrders.map((order) => (
-                          <div
-                            key={order.id}
-                            className={`rounded-lg border p-3 text-sm ${
-                              order.status === 'cancelled'
-                                ? 'border-gray-200 bg-gray-50 opacity-60'
-                                : 'border-gray-200 bg-gray-50'
-                            }`}
-                          >
-                            <div className="mb-1 flex items-center gap-2">
-                              <span className="font-medium text-gray-900">
-                                {order.name} — {order.phone}
-                              </span>
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  order.status === 'confirmed'
-                                    ? 'bg-green-200 text-green-800'
+                  .map(([villageName, villageOrders]) => {
+                    const activeCount = villageOrders.filter(
+                      (o) => o.status !== 'cancelled'
+                    ).length;
+                    return (
+                      <div key={villageName}>
+                        <h3 className="mb-2 text-sm font-semibold text-gray-900">
+                          {villageName} ({activeCount}{' '}
+                          {activeCount === 1
+                            ? 'objednávka'
+                            : activeCount < 5
+                              ? 'objednávky'
+                              : 'objednávek'}
+                          )
+                        </h3>
+                        <div className="space-y-3">
+                          {villageOrders.map((order) => (
+                            <div
+                              key={order.id}
+                              className={`rounded-lg border p-3 text-sm ${
+                                order.status === 'cancelled'
+                                  ? 'border-gray-200 bg-gray-50 opacity-60'
+                                  : 'border-gray-200 bg-gray-50'
+                              }`}
+                            >
+                              <div className="mb-1 flex items-center gap-2">
+                                <span className="font-medium text-gray-900">
+                                  {order.name} — {order.phone}
+                                </span>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    order.status === 'confirmed'
+                                      ? 'bg-green-200 text-green-800'
+                                      : order.status === 'cancelled'
+                                        ? 'bg-gray-200 text-gray-600'
+                                        : 'bg-yellow-200 text-yellow-800'
+                                  }`}
+                                >
+                                  {order.status === 'confirmed'
+                                    ? 'Potvrzená'
                                     : order.status === 'cancelled'
-                                      ? 'bg-gray-200 text-gray-600'
-                                      : 'bg-yellow-200 text-yellow-800'
-                                }`}
-                              >
-                                {order.status === 'confirmed'
-                                  ? 'Potvrzená'
-                                  : order.status === 'cancelled'
-                                    ? 'Zrušená'
-                                    : 'Nová'}
-                              </span>
+                                      ? 'Zrušená'
+                                      : 'Nová'}
+                                </span>
+                              </div>
+                              <div className="mb-2 text-gray-600">{order.address}</div>
+                              <table className="w-full">
+                                <tbody>
+                                  {order.items.map((item, i) => (
+                                    <tr key={i} className="border-b border-gray-100 last:border-0">
+                                      <td className="py-1 text-gray-700">{item.name}</td>
+                                      <td className="py-1 text-center text-gray-600">
+                                        {item.quantity}x
+                                      </td>
+                                      <td className="py-1 text-right text-gray-600">
+                                        {item.price * item.quantity} Kč
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              {order.note && (
+                                <div className="mt-2 text-xs text-gray-500">
+                                  Poznámka: {order.note}
+                                </div>
+                              )}
+                              {order.status === 'new' && (
+                                <div className="mt-3 flex gap-2">
+                                  <button
+                                    onClick={() => handleOrderStatus(order.id, 'confirmed')}
+                                    className="rounded-lg border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-50"
+                                  >
+                                    Potvrdit
+                                  </button>
+                                  <button
+                                    onClick={() => handleOrderStatus(order.id, 'cancelled')}
+                                    className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                  >
+                                    Zrušit
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                            <div className="mb-2 text-gray-600">{order.address}</div>
-                            <table className="w-full">
-                              <tbody>
-                                {order.items.map((item, i) => (
-                                  <tr key={i} className="border-b border-gray-100 last:border-0">
-                                    <td className="py-1 text-gray-700">{item.name}</td>
-                                    <td className="py-1 text-center text-gray-600">
-                                      {item.quantity}x
-                                    </td>
-                                    <td className="py-1 text-right text-gray-600">
-                                      {item.price * item.quantity} Kč
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                            {order.note && (
-                              <div className="mt-2 text-xs text-gray-500">
-                                Poznámka: {order.note}
-                              </div>
-                            )}
-                            {order.status === 'new' && (
-                              <div className="mt-3 flex gap-2">
-                                <button
-                                  onClick={() => handleOrderStatus(order.id, 'confirmed')}
-                                  className="rounded-lg border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-50"
-                                >
-                                  Potvrdit
-                                </button>
-                                <button
-                                  onClick={() => handleOrderStatus(order.id, 'cancelled')}
-                                  className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
-                                >
-                                  Zrušit
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             )}
           </div>

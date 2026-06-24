@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   }
 
   const rows = await query<{ date: string; count: string }>(
-    'SELECT date, COUNT(*)::text as count FROM orders WHERE date >= $1 AND date <= $2 GROUP BY date',
+    "SELECT date, COUNT(*)::text as count FROM orders WHERE date >= $1 AND date <= $2 AND status != 'cancelled' GROUP BY date",
     [from, to]
   );
 

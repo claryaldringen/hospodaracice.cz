@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/app/lib/auth';
-import { findOrderById, updateOrderStatus } from '@/app/lib/orders';
+import { findOrderById, setOrderStatusIfNew } from '@/app/lib/orders';
 import { sendOrderConfirmedEmail, sendOrderCancelledEmail } from '@/app/lib/email';
 
 export async function POST(req: NextRequest) {
@@ -18,11 +18,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Objednávka nenalezena.' }, { status: 404 });
   }
 
-  if (order.status === status) {
+  // Potvrdit/zrušit lze jen objednávku ve stavu 'new'. Atomický přechod brání
+  // duplicitním e-mailům při souběhu i nepovoleným přechodům (např. potvrzení
+  // už zrušené objednávky ze zastaralé stránky). E-mail jde jen při skutečné změně.
+  if (order.status !== 'new') {
     return NextResponse.json({ ok: true });
   }
 
-  await updateOrderStatus(id, status);
+  const changed = await setOrderStatusIfNew(id, status);
+  if (!changed) {
+    return NextResponse.json({ ok: true });
+  }
 
   try {
     if (status === 'confirmed') {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { createOrder } from '@/app/lib/orders';
 import { sendOrderNotification } from '@/app/lib/email';
+import { isDateOrderable } from '@/app/lib/menuDeadline';
 import { query } from '@/app/lib/db';
 import type { OrderItem, Order } from '@/app/types';
 
@@ -20,6 +21,15 @@ export async function POST(req: NextRequest) {
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: 'Vyberte alespoň jedno jídlo.' }, { status: 400 });
+  }
+
+  // Backstop k uzávěrce (10:00 den předem) — klient ji už filtruje, ale přímý
+  // POST po termínu by jinak prošel.
+  if (!isDateOrderable(date)) {
+    return NextResponse.json(
+      { error: 'Objednávky na tento den jsou již uzavřené.' },
+      { status: 400 }
+    );
   }
 
   const villages = await loadVillages();

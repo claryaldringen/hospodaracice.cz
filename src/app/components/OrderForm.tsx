@@ -135,6 +135,8 @@ export default function OrderForm({ days }: OrderFormProps) {
         setAddress('');
         setNote('');
         setQuantities({});
+        setGdprConsent(false);
+        setSelectedDay(null);
       } else {
         const data = await res.json();
         setResult({ type: 'error', text: data.error || 'Chyba při odesílání objednávky.' });

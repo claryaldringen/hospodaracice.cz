@@ -5,6 +5,17 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
+// Escapování uživatelských hodnot vkládaných do HTML těla e-mailu, aby znaky
+// jako < > & " ' nerozbily layout ani neumožnily vložení markupu.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const FROM = 'Hospoda Na Palouku <noreply@hospodaracice.cz>';
 const REPLY_TO = 'hospoda@obec-racice.cz';
@@ -30,13 +41,13 @@ export async function sendConfirmationRequest(reservation: Reservation) {
     html: `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2>Potvrzení rezervace</h2>
-        <p>Dobrý den, ${reservation.name},</p>
+        <p>Dobrý den, ${escapeHtml(reservation.name)},</p>
         <p>obdrželi jsme vaši žádost o rezervaci:</p>
         <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Datum</td><td style="padding: 6px 12px;">${reservation.date}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Čas</td><td style="padding: 6px 12px;">${reservation.timeFrom} – ${reservation.timeTo}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Datum</td><td style="padding: 6px 12px;">${escapeHtml(reservation.date)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Čas</td><td style="padding: 6px 12px;">${escapeHtml(reservation.timeFrom)} – ${escapeHtml(reservation.timeTo)}</td></tr>
           <tr><td style="padding: 6px 12px; font-weight: bold;">Počet míst</td><td style="padding: 6px 12px;">${reservation.seats}</td></tr>
-          ${reservation.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${reservation.note}</td></tr>` : ''}
+          ${reservation.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${escapeHtml(reservation.note)}</td></tr>` : ''}
         </table>
         <p>Pro potvrzení klikněte na tlačítko níže. Rezervace je platná 30 minut.</p>
         <a href="${confirmUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 8px 0;">Potvrdit rezervaci</a>
@@ -57,13 +68,13 @@ export async function sendConfirmedEmail(reservation: Reservation) {
     html: `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2>Rezervace potvrzena</h2>
-        <p>Dobrý den, ${reservation.name},</p>
+        <p>Dobrý den, ${escapeHtml(reservation.name)},</p>
         <p>vaše rezervace byla úspěšně potvrzena:</p>
         <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Datum</td><td style="padding: 6px 12px;">${reservation.date}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Čas</td><td style="padding: 6px 12px;">${reservation.timeFrom} – ${reservation.timeTo}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Datum</td><td style="padding: 6px 12px;">${escapeHtml(reservation.date)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Čas</td><td style="padding: 6px 12px;">${escapeHtml(reservation.timeFrom)} – ${escapeHtml(reservation.timeTo)}</td></tr>
           <tr><td style="padding: 6px 12px; font-weight: bold;">Počet míst</td><td style="padding: 6px 12px;">${reservation.seats}</td></tr>
-          ${reservation.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${reservation.note}</td></tr>` : ''}
+          ${reservation.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${escapeHtml(reservation.note)}</td></tr>` : ''}
         </table>
         <p>Těšíme se na vás!</p>
         <p style="margin-top: 24px; font-size: 14px; color: #666;">Pokud potřebujete rezervaci zrušit, klikněte <a href="${cancelUrl}">zde</a>.</p>
@@ -88,12 +99,12 @@ export async function sendReservationNotification(reservation: Reservation) {
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2>Potvrzená rezervace</h2>
         <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Jméno</td><td style="padding: 6px 12px;">${reservation.name}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Email</td><td style="padding: 6px 12px;">${reservation.email}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Datum</td><td style="padding: 6px 12px;">${reservation.date}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Čas</td><td style="padding: 6px 12px;">${reservation.timeFrom} – ${reservation.timeTo}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Jméno</td><td style="padding: 6px 12px;">${escapeHtml(reservation.name)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Email</td><td style="padding: 6px 12px;">${escapeHtml(reservation.email)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Datum</td><td style="padding: 6px 12px;">${escapeHtml(reservation.date)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Čas</td><td style="padding: 6px 12px;">${escapeHtml(reservation.timeFrom)} – ${escapeHtml(reservation.timeTo)}</td></tr>
           <tr><td style="padding: 6px 12px; font-weight: bold;">Počet míst</td><td style="padding: 6px 12px;">${reservation.seats}</td></tr>
-          ${reservation.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${reservation.note}</td></tr>` : ''}
+          ${reservation.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${escapeHtml(reservation.note)}</td></tr>` : ''}
         </table>
       </div>
     `,
@@ -109,7 +120,7 @@ function orderItemsHtml(order: Order): string {
     .map(
       (item) =>
         `<tr>
-          <td style="padding: 6px 12px;">${item.name}</td>
+          <td style="padding: 6px 12px;">${escapeHtml(item.name)}</td>
           <td style="padding: 6px 12px; text-align: center;">${item.quantity}×</td>
           <td style="padding: 6px 12px; text-align: right;">${item.price * item.quantity} Kč</td>
         </tr>`
@@ -134,12 +145,12 @@ export async function sendOrderNotification(order: Order) {
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2>Nová objednávka</h2>
         <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Jméno</td><td style="padding: 6px 12px;">${order.name}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">E-mail</td><td style="padding: 6px 12px;">${order.email}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Telefon</td><td style="padding: 6px 12px;">${order.phone}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Adresa</td><td style="padding: 6px 12px;">${order.address}, ${order.village}</td></tr>
-          <tr><td style="padding: 6px 12px; font-weight: bold;">Den</td><td style="padding: 6px 12px;">${order.day} ${order.date}</td></tr>
-          ${order.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${order.note}</td></tr>` : ''}
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Jméno</td><td style="padding: 6px 12px;">${escapeHtml(order.name)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">E-mail</td><td style="padding: 6px 12px;">${escapeHtml(order.email)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Telefon</td><td style="padding: 6px 12px;">${escapeHtml(order.phone)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Adresa</td><td style="padding: 6px 12px;">${escapeHtml(order.address)}, ${escapeHtml(order.village)}</td></tr>
+          <tr><td style="padding: 6px 12px; font-weight: bold;">Den</td><td style="padding: 6px 12px;">${escapeHtml(order.day)} ${escapeHtml(order.date)}</td></tr>
+          ${order.note ? `<tr><td style="padding: 6px 12px; font-weight: bold;">Poznámka</td><td style="padding: 6px 12px;">${escapeHtml(order.note)}</td></tr>` : ''}
         </table>
         <h3>Objednávka</h3>
         <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
@@ -171,8 +182,8 @@ export async function sendOrderConfirmedEmail(order: Order) {
     html: `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2>Objednávka potvrzena</h2>
-        <p>Dobrý den, ${order.name},</p>
-        <p>vaši objednávku na ${order.day} ${order.date} jsme potvrdili a připravíme ji k doručení:</p>
+        <p>Dobrý den, ${escapeHtml(order.name)},</p>
+        <p>vaši objednávku na ${escapeHtml(order.day)} ${escapeHtml(order.date)} jsme potvrdili a připravíme ji k doručení:</p>
         <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
           <tr style="border-bottom: 1px solid #ddd;">
             <th style="padding: 6px 12px; text-align: left;">Jídlo</th>
@@ -185,7 +196,7 @@ export async function sendOrderConfirmedEmail(order: Order) {
             <td style="padding: 6px 12px; text-align: right; font-weight: bold;">${orderTotal(order)} Kč</td>
           </tr>
         </table>
-        <p>Doručíme na adresu: ${order.address}, ${order.village}.</p>
+        <p>Doručíme na adresu: ${escapeHtml(order.address)}, ${escapeHtml(order.village)}.</p>
         <p>Děkujeme za objednávku!</p>
       </div>
     `,
@@ -203,8 +214,8 @@ export async function sendOrderCancelledEmail(order: Order) {
     html: `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2>Objednávka zrušena</h2>
-        <p>Dobrý den, ${order.name},</p>
-        <p>vaši objednávku na ${order.day} ${order.date} jsme bohužel museli zrušit.</p>
+        <p>Dobrý den, ${escapeHtml(order.name)},</p>
+        <p>vaši objednávku na ${escapeHtml(order.day)} ${escapeHtml(order.date)} jsme bohužel museli zrušit.</p>
         <p>V případě dotazů nás kontaktujte na <a href="mailto:${REPLY_TO}">${REPLY_TO}</a>.</p>
         <p>Omlouváme se za nepříjemnost.</p>
       </div>

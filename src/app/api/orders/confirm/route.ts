@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findOrderByToken, updateOrderStatus } from '@/app/lib/orders';
+import { findOrderByToken, setOrderStatusIfNew } from '@/app/lib/orders';
 import { sendOrderConfirmedEmail } from '@/app/lib/email';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -23,7 +23,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${BASE_URL}/objednavka/potvrzeno?status=already`);
   }
 
-  await updateOrderStatus(order.id, 'confirmed');
+  // Atomicky potvrď jen pokud je objednávka stále 'new'. Při souběhu
+  // (dvojklik / současný admin) vyhraje jeden požadavek a jen ten pošle e-mail.
+  const changed = await setOrderStatusIfNew(order.id, 'confirmed');
+  if (!changed) {
+    return NextResponse.redirect(`${BASE_URL}/objednavka/potvrzeno?status=already`);
+  }
 
   try {
     await sendOrderConfirmedEmail({ ...order, status: 'confirmed' });
