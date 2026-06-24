@@ -36,7 +36,7 @@ export default function PrivacyPage() {
               <strong>Rezervace:</strong> jméno, email, počet míst, datum a čas, poznámka
             </li>
             <li>
-              <strong>Objednávky:</strong> jméno, telefon, adresa, obec, poznámka
+              <strong>Objednávky:</strong> jméno, telefon, e-mail, adresa, obec, poznámka
             </li>
           </ul>
         </section>
