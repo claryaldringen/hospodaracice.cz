@@ -179,7 +179,7 @@ function ReservationContent() {
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700">
-                Jméno
+                Jméno <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
@@ -193,7 +193,7 @@ function ReservationContent() {
 
             <div>
               <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
-                Email
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -207,7 +207,7 @@ function ReservationContent() {
 
             <div>
               <label htmlFor="seats" className="mb-1 block text-sm font-medium text-gray-700">
-                Počet míst
+                Počet míst <span className="text-red-500">*</span>
               </label>
               <input
                 id="seats"
@@ -222,7 +222,7 @@ function ReservationContent() {
 
             <div>
               <label htmlFor="date" className="mb-1 block text-sm font-medium text-gray-700">
-                Datum
+                Datum <span className="text-red-500">*</span>
               </label>
               <input
                 id="date"
@@ -238,7 +238,7 @@ function ReservationContent() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="timeFrom" className="mb-1 block text-sm font-medium text-gray-700">
-                  Čas od
+                  Čas od <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="timeFrom"
@@ -256,7 +256,7 @@ function ReservationContent() {
               </div>
               <div>
                 <label htmlFor="timeTo" className="mb-1 block text-sm font-medium text-gray-700">
-                  Čas do
+                  Čas do <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="timeTo"
