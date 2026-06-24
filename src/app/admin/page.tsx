@@ -44,6 +44,8 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderView, setOrderView] = useState<'summary' | 'village'>('summary');
   const [orderCounts, setOrderCounts] = useState<Record<string, number>>({});
+  const [confirmTime, setConfirmTime] = useState('16:00');
+  const [savedConfirmTime, setSavedConfirmTime] = useState('16:00');
   const [selectedWeek, setSelectedWeek] = useState(() => getCurrentWeekKey());
   const [uploadedWeeks, setUploadedWeeks] = useState<Set<string>>(new Set());
   const weekOptions = getWeekOptions();
@@ -324,6 +326,23 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, orderDate, loadOrders, loadOrderCounts]);
 
+  const loadOrderSettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/order-settings');
+      if (res.ok) {
+        const data = await res.json();
+        setConfirmTime(data.confirmTime);
+        setSavedConfirmTime(data.confirmTime);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) loadOrderSettings();
+  }, [isAuthenticated, loadOrderSettings]);
+
   const handleCancelReservation = async (id: string) => {
     const res = await fetch('/api/reservations/admin-cancel', {
       method: 'POST',
@@ -370,6 +389,24 @@ export default function AdminPage() {
       }
     } catch {
       showStatus('error', 'Chyba při ukládání otevírací doby.');
+    }
+  };
+
+  const handleSaveConfirmTime = async () => {
+    try {
+      const res = await fetch('/api/order-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmTime }),
+      });
+      if (res.ok) {
+        setSavedConfirmTime(confirmTime);
+        showStatus('success', 'Čas potvrzení uložen!');
+      } else {
+        showStatus('error', 'Chyba při ukládání času potvrzení.');
+      }
+    } catch {
+      showStatus('error', 'Chyba při ukládání času potvrzení.');
     }
   };
 
@@ -921,6 +958,25 @@ export default function AdminPage() {
                 );
               })}
             </select>
+          </div>
+          <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-3">
+            <label htmlFor="confirm-time" className="text-sm text-gray-600">
+              Potvrdit nejpozději v:
+            </label>
+            <input
+              id="confirm-time"
+              type="time"
+              value={confirmTime}
+              onChange={(e) => setConfirmTime(e.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+            <button
+              onClick={handleSaveConfirmTime}
+              disabled={confirmTime === savedConfirmTime}
+              className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Uložit
+            </button>
           </div>
 
           {/* View toggle */}
