@@ -358,6 +358,11 @@ export default function AdminPage() {
   };
 
   const handleOrderStatus = async (id: string, status: 'confirmed' | 'cancelled') => {
+    const message =
+      status === 'confirmed'
+        ? 'Opravdu potvrdit objednávku? Zákazníkovi odejde potvrzovací e-mail.'
+        : 'Opravdu zrušit objednávku? Zákazníkovi odejde e-mail o zrušení.';
+    if (!window.confirm(message)) return;
     const res = await fetch('/api/orders/admin-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1085,6 +1090,24 @@ export default function AdminPage() {
                                       : 'Nová'}
                                 </span>
                               </div>
+                              {order.status !== 'new' && order.statusChangedAt && (
+                                <div className="mb-2 text-xs text-gray-500">
+                                  {order.status === 'confirmed' ? 'Potvrzeno' : 'Zrušeno'}
+                                  {order.statusSource === 'email'
+                                    ? ' z e-mailu'
+                                    : order.statusSource === 'admin'
+                                      ? ' z adminu'
+                                      : ''}
+                                  {' · '}
+                                  {new Date(order.statusChangedAt).toLocaleString('cs-CZ', {
+                                    day: 'numeric',
+                                    month: 'numeric',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </div>
+                              )}
                               <div className="mb-2 text-gray-600">{order.address}</div>
                               <table className="w-full">
                                 <tbody>
