@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   // Atomicky potvrď jen pokud je objednávka stále 'new'. Při souběhu
   // (dvojklik / současný admin) vyhraje jeden požadavek a jen ten pošle e-mail.
-  const changed = await setOrderStatusIfNew(order.id, 'confirmed');
+  const changed = await setOrderStatusIfNew(order.id, 'confirmed', 'email');
   if (!changed) {
     return NextResponse.redirect(`${BASE_URL}/objednavka/potvrzeno?status=already`);
   }

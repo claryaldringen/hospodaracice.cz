@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
     items: items as OrderItem[],
     status: 'new',
     token: randomUUID(),
+    statusChangedAt: null,
+    statusSource: null,
     createdAt: new Date().toISOString(),
   };
 

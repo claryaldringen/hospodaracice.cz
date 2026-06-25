@@ -69,6 +69,8 @@ export interface Order {
   items: OrderItem[];
   status: 'new' | 'confirmed' | 'cancelled';
   token: string;
+  statusChangedAt: string | null;
+  statusSource: 'email' | 'admin' | null;
   createdAt: string;
 }
 

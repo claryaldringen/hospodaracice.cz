@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const changed = await setOrderStatusIfNew(id, status);
+  const changed = await setOrderStatusIfNew(id, status, 'admin');
   if (!changed) {
     return NextResponse.json({ ok: true });
   }

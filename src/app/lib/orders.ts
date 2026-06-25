@@ -15,6 +15,8 @@ interface OrderRow {
   status: string;
   token: string | null;
   created_at: Date;
+  status_changed_at: Date | null;
+  status_source: string | null;
 }
 
 function mapRow(row: OrderRow): Order {
@@ -31,6 +33,8 @@ function mapRow(row: OrderRow): Order {
     items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items,
     status: row.status as Order['status'],
     token: row.token ?? '',
+    statusChangedAt: row.status_changed_at ? row.status_changed_at.toISOString() : null,
+    statusSource: (row.status_source as Order['statusSource']) ?? null,
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -74,14 +78,19 @@ export async function findOrderByToken(token: string): Promise<Order | null> {
   return row ? mapRow(row) : null;
 }
 
-// Atomicky změní stav objednávky pouze pokud je dosud 'new'. Vrací true, když
-// k přechodu skutečně došlo (tj. tento požadavek vyhrál). Brání duplicitním
-// e-mailům při race (dvojklik / souběžný admin) i nepovoleným přechodům
-// (cancelled→confirmed apod.).
-export async function setOrderStatusIfNew(id: string, status: Order['status']): Promise<boolean> {
+// Atomicky změní stav objednávky pouze pokud je dosud 'new'. Zapíše i čas změny
+// a zdroj ('email' z potvrzovacího odkazu, 'admin' z admin panelu). Vrací true,
+// když k přechodu skutečně došlo (tj. tento požadavek vyhrál). Brání duplicitním
+// e-mailům při race i nepovoleným přechodům.
+export async function setOrderStatusIfNew(
+  id: string,
+  status: Order['status'],
+  source: 'email' | 'admin'
+): Promise<boolean> {
   const rows = await query<{ id: string }>(
-    `UPDATE orders SET status = $1 WHERE id = $2 AND status = 'new' RETURNING id`,
-    [status, id]
+    `UPDATE orders SET status = $1, status_changed_at = NOW(), status_source = $2
+     WHERE id = $3 AND status = 'new' RETURNING id`,
+    [status, source, id]
   );
   return rows.length > 0;
 }
