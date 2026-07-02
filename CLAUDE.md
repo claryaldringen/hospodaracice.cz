@@ -22,7 +22,14 @@ Web pro „Hospodu Na Palouku" — restaurace v Račicích nad Berounkou. Strán
 - **Reverse proxy:** Caddy
 - **Databáze:** PostgreSQL na stejném VPS
 - **Úložiště souborů:** lokální filesystem VPS (`/opt/hospodaracice/uploads/`), servírované Caddym
-- Pro práci se serverem použij skill `vps-devops`.
+
+### Přístup k serveru
+
+- **SSH:** `ssh root@hospodaracice.cz` (host je v `~/.ssh/known_hosts`, přihlášení přes klíč). Připojuj se rovnou jako `root` — zkoušení víc uživatelských jmen spustí fail2ban a dočasně zablokuje IP.
+- **Aplikace na VPS:** `/opt/hospodaracice/app` (běží pod PM2 jako proces `hospodaracice`).
+- **Nasazení:** na serveru spusť `bash scripts/deploy.sh` v `/opt/hospodaracice/app` (`git pull` z `main` → `npm ci` → `npm run db:migrate` → `npm run build` → `pm2 restart hospodaracice`). Před nasazením musí být změny v `main`.
+- **Produkční DB:** PostgreSQL na `localhost:5432`, connection string v `/opt/hospodaracice/app/.env` (`DATABASE_URL`). Dotazy přes `psql "$DATABASE_URL"` přímo na serveru (`set -a; . /opt/hospodaracice/app/.env; set +a`).
+- **Uploady** jsou veřejně čitelné přes Caddy na `https://hospodaracice.cz/uploads/...` — obrázky nabídek jde tedy prohlížet i bez SSH.
 
 ## Příkazy
 
