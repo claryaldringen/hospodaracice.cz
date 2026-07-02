@@ -42,7 +42,13 @@ async function extractMenu(imageBuffer: Buffer): Promise<WeeklyMenu | null> {
               type: 'text',
               text: `Analyzuj tento obrázek týdenní nabídky jídel. Vrať POUZE validní JSON v tomto formátu, nic dalšího:
 {"days":[{"day":"Pondělí","date":"YYYY-MM-DD","meals":[{"name":"Název jídla","price":145}]}]}
-Pokud datum NENÍ na obrázku, nech pole "date" prázdný řetězec "". Nikdy nevymýšlej datumy, které na obrázku nejsou. Cenu uveď jako číslo bez Kč.`,
+
+Pravidla:
+- Každé jídlo patří přesně k tomu dni, pod kterým je na obrázku vytištěné. NIKDY neposouvej jídla mezi dny.
+- Pokud je u některého dne uvedeno, že se nevaří / je zavřeno (např. „nevaříme", „dnes nevaříme", „zavřeno"), tento den do výstupu VŮBEC nezařazuj a jeho jídla si nevymýšlej ani nepřebírej z jiných dnů.
+- Do výstupu zařaď jen dny, které mají alespoň jedno skutečné jídlo. Text jako „nevaříme" nebo „zavřeno" není jídlo.
+- Pokud datum NENÍ na obrázku, nech pole "date" prázdný řetězec "". Nikdy nevymýšlej datumy, které na obrázku nejsou.
+- Cenu uveď jako číslo bez Kč.`,
             },
           ],
         },
